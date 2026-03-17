@@ -104,17 +104,20 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
                 </button>
 
                 <div className="detail-meta">
-                    <span className="card-chapter">{skill.chapter}</span>
-                    <span className="card-category">{skill.category}</span>
+                    <span className="detail-meta-label">{skill.chapter}</span>
+                    <span className="detail-meta-sep">/</span>
+                    <span className="detail-meta-label">{skill.category}</span>
+                    {skill.lastUpdated && (
+                        <>
+                            <span className="detail-meta-sep">/</span>
+                            <span className="detail-meta-date">{skill.lastUpdated}</span>
+                        </>
+                    )}
                 </div>
 
                 <h1 className="detail-heading">{skill.title}</h1>
 
-                {skill.lastUpdated && (
-                    <div className="detail-status-line">
-                        <span className="detail-updated">Last updated: {skill.lastUpdated}</span>
-                    </div>
-                )}
+                <div className="detail-divider" />
 
                 <div className="detail-layout">
                     <aside className="detail-toc">

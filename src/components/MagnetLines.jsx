@@ -1,9 +1,29 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
+
+function useIsMobile(breakpoint = 768) {
+    const [isMobile, setIsMobile] = useState(() =>
+        typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+    );
+
+    useEffect(() => {
+        const mq = window.matchMedia(`(max-width: ${breakpoint}px)`);
+        const handler = (e) => setIsMobile(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, [breakpoint]);
+
+    return isMobile;
+}
 
 export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'currentColor', lineWidth = 1, lineHeight = 24, isDark = false }) {
     const containerRef = useRef(null);
     const prevAngles = useRef([]);
     const cumAngles = useRef([]);
+    const isMobile = useIsMobile();
+
+    const actualRows = isMobile ? 6 : rows;
+    const actualCols = isMobile ? 10 : columns;
+    const actualLineHeight = isMobile ? 20 : lineHeight;
 
     useEffect(() => {
         const container = containerRef.current;
@@ -11,20 +31,18 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
 
         const spans = Array.from(container.querySelectorAll('span'));
 
-        // Initialise per-line state
         prevAngles.current = new Array(spans.length).fill(0);
         cumAngles.current = new Array(spans.length).fill(0);
 
-        const onPointerMove = (e) => {
+        const updateLines = (clientX, clientY) => {
             spans.forEach((span, i) => {
                 const rect = span.getBoundingClientRect();
                 const cx = rect.left + rect.width / 2;
                 const cy = rect.top + rect.height / 2;
-                const dx = e.clientX - cx;
-                const dy = e.clientY - cy;
+                const dx = clientX - cx;
+                const dy = clientY - cy;
                 const raw = Math.atan2(dy, dx) * (180 / Math.PI);
 
-                // Shortest-path delta to avoid 360° wrap spin
                 let delta = raw - prevAngles.current[i];
                 if (delta > 180) delta -= 360;
                 if (delta < -180) delta += 360;
@@ -36,9 +54,17 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
             });
         };
 
-        const onPointerLeave = () => {
+        const onPointerMove = (e) => {
+            updateLines(e.clientX, e.clientY);
+        };
+
+        const onTouchMove = (e) => {
+            const touch = e.touches[0];
+            if (touch) updateLines(touch.clientX, touch.clientY);
+        };
+
+        const resetLines = () => {
             spans.forEach((span, i) => {
-                // Snap cumulative back toward 0 via shortest path
                 let target = cumAngles.current[i] % 360;
                 if (target > 180) target -= 360;
                 if (target < -180) target += 360;
@@ -49,17 +75,20 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
         };
 
         window.addEventListener('pointermove', onPointerMove);
-        window.addEventListener('pointerleave', onPointerLeave);
+        window.addEventListener('pointerleave', resetLines);
+        container.addEventListener('touchmove', onTouchMove, { passive: true });
+        container.addEventListener('touchend', resetLines);
 
         return () => {
             window.removeEventListener('pointermove', onPointerMove);
-            window.removeEventListener('pointerleave', onPointerLeave);
+            window.removeEventListener('pointerleave', resetLines);
+            container.removeEventListener('touchmove', onTouchMove);
+            container.removeEventListener('touchend', resetLines);
         };
-    }, [rows, columns]);
+    }, [actualRows, actualCols]);
 
     const color = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)';
-
-    const totalLines = rows * columns;
+    const totalLines = actualRows * actualCols;
 
     return (
         <div
@@ -68,11 +97,11 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
                 position: 'absolute',
                 inset: 0,
                 display: 'grid',
-                gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                gridTemplateRows: `repeat(${rows}, 1fr)`,
+                gridTemplateColumns: `repeat(${actualCols}, 1fr)`,
+                gridTemplateRows: `repeat(${actualRows}, 1fr)`,
                 width: '100%',
                 height: '100%',
-                pointerEvents: 'none',
+                touchAction: 'pan-y',
             }}
         >
             {Array.from({ length: totalLines }).map((_, i) => (
@@ -81,7 +110,7 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
                     style={{
                         display: 'block',
                         width: `${lineWidth}px`,
-                        height: `${lineHeight}px`,
+                        height: `${actualLineHeight}px`,
                         backgroundColor: color,
                         borderRadius: `${lineWidth}px`,
                         margin: 'auto',

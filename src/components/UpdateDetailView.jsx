@@ -51,11 +51,13 @@ export default function UpdateDetailView({ onBack, onSkillClick }) {
                 </button>
 
                 <div className="detail-meta">
-                    <span className="update-date">{update.date}</span>
+                    <span className="detail-meta-date">{update.date}</span>
                     <span className="update-tag">{update.tag}</span>
                 </div>
 
                 <h1 className="detail-heading">{update.title}</h1>
+
+                <div className="detail-divider" />
 
                 <section className="detail-section">
                     <h2 className="detail-section-title">Details</h2>
