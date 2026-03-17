@@ -13,11 +13,7 @@ export function useTheme() {
         const saved = localStorage.getItem('ai-playbook-theme');
         if (saved !== null) return saved === 'dark';
 
-        // Fall back to system preference
-        if (window.matchMedia) {
-            return window.matchMedia('(prefers-color-scheme: dark)').matches;
-        }
-
+        // Default to light theme
         return false;
     });
 
