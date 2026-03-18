@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAdminAuth } from './useAdminAuth';
 import './admin.css';
@@ -37,59 +37,108 @@ function IconPreview() {
 
 function IconLogout() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
     </svg>
   );
 }
 
+function IconMenu() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  );
+}
+
+function getInitial(email) {
+  if (!email) return '?';
+  return email.charAt(0).toUpperCase();
+}
+
 export default function AdminLayout({ children, title, actions, fullWidth }) {
   const { session, logout } = useAdminAuth();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     navigate('/admin/login');
   };
 
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') setSidebarOpen(false);
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
+  const email = session?.user?.email;
+  const initial = getInitial(email);
+
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      {/* Mobile hamburger */}
+      <button
+        className="admin-mobile-toggle"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Open menu"
+      >
+        <IconMenu />
+      </button>
+
+      {/* Mobile overlay */}
+      <div
+        className={`admin-sidebar-overlay ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-header">
-          <span className="admin-sidebar-logo">Ai Atlas</span>
-          <span className="admin-sidebar-label">Admin</span>
+          <div className="admin-sidebar-brand">
+            <span className="admin-sidebar-logo">Ai Atlas</span>
+            <span className="admin-sidebar-label">Admin</span>
+          </div>
         </div>
 
         <nav className="admin-nav">
           <div className="admin-nav-label">Content</div>
-          <NavLink to="/admin/skills" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/admin/skills" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconSkills />
             Skills
           </NavLink>
-          <NavLink to="/admin/tools" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/admin/tools" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconTools />
             Tools
           </NavLink>
-          <NavLink to="/admin/updates" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/admin/updates" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconArticles />
             Articles
           </NavLink>
 
-          <div className="admin-nav-label" style={{ marginTop: '1rem' }}>Site</div>
-          <NavLink to="/admin/preview" className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+          <div className="admin-nav-label" style={{ marginTop: '0.75rem' }}>Site</div>
+          <NavLink to="/admin/preview" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconPreview />
             Preview
           </NavLink>
         </nav>
 
         <div className="admin-sidebar-footer">
-          {session?.user?.email && (
-            <div className="admin-user-email">{session.user.email}</div>
+          {email && (
+            <div className="admin-user-info">
+              <div className="admin-user-avatar">{initial}</div>
+              <div className="admin-user-email">{email}</div>
+            </div>
           )}
           <button className="admin-logout-btn" onClick={handleLogout}>
             <IconLogout />
             Log out
           </button>
+          <div className="admin-sidebar-version">v1.0 prod</div>
         </div>
       </aside>
 
