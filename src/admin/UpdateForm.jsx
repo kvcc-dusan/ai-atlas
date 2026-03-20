@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
 import RepeatableField from './components/RepeatableField';
+import ImageUpload from './components/ImageUpload';
 import './admin.css';
 
 const TAGS = ['Model update', 'New tool', 'Policy change', 'New skill'];
@@ -13,6 +14,8 @@ const EMPTY = {
   title: '',
   summary: '',
   tag: 'Model update',
+  image_url: '',
+  image_aspect_ratio: '16/9',
   content: [],
   action_items: [],
   affected_skills: [],
@@ -44,6 +47,7 @@ export default function UpdateForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [toast, setToast] = useState(false);
 
   useEffect(() => {
     supabase.from('skills').select('id, title').order('id').then(({ data }) => setAllSkills(data ?? []));
@@ -70,11 +74,19 @@ export default function UpdateForm() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    const payload = { ...form };
+    // Send null (not empty string) so the DB clears the value
+    if (!payload.image_url) payload.image_url = null;
     const { error: err } = isNew
-      ? await supabase.from('updates').insert(form)
-      : await supabase.from('updates').update(form).eq('id', id);
-    if (err) { setError(err.message); setSaving(false); }
-    else navigate('/admin/updates');
+      ? await supabase.from('updates').insert(payload)
+      : await supabase.from('updates').update(payload).eq('id', id);
+    setSaving(false);
+    if (err) { console.error('Save error:', err); setError(err.message); }
+    else {
+      setToast(true);
+      setTimeout(() => setToast(false), 2500);
+      if (isNew) navigate(`/admin/updates/${form.id}`, { replace: true });
+    }
   };
 
   const handleDelete = async () => {
@@ -88,6 +100,7 @@ export default function UpdateForm() {
   return (
     <AdminLayout>
       {showConfirm && <ConfirmDialog title={form.title} onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
+      {toast && <div className="admin-toast">All changes have been saved</div>}
 
       <button className="admin-back" onClick={() => navigate('/admin/updates')} aria-label="Back to Articles">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -100,11 +113,6 @@ export default function UpdateForm() {
           <h1 className="admin-page-title">{isNew ? 'New Article' : form.title || 'Edit Article'}</h1>
           <p className="admin-page-desc">{isNew ? 'Add a new update to the homepage carousel.' : `Editing ${form.tag ?? 'article'}`}</p>
         </div>
-        {!isNew && (
-          <button type="button" className="admin-btn admin-btn-danger" onClick={() => setShowConfirm(true)}>
-            Delete article
-          </button>
-        )}
       </div>
 
       <form onSubmit={handleSave}>
@@ -165,6 +173,21 @@ export default function UpdateForm() {
                 {TAGS.map((t) => <option key={t}>{t}</option>)}
               </select>
             </div>
+          </div>
+        </div>
+
+        {/* ── Hero Image ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">Hero Image</span>
+          </div>
+          <div className="admin-section-body">
+            <ImageUpload
+              imageUrl={form.image_url ?? ''}
+              aspectRatio={form.image_aspect_ratio ?? '16/9'}
+              onImageChange={(url) => set('image_url', url)}
+              onAspectRatioChange={(ratio) => set('image_aspect_ratio', ratio)}
+            />
           </div>
         </div>
 

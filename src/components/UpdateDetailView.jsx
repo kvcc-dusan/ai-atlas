@@ -59,6 +59,12 @@ export default function UpdateDetailView({ onBack, onSkillClick }) {
 
                 <div className="detail-divider" />
 
+                {update.image_url && (
+                    <div className={`detail-hero-image${update.image_aspect_ratio === '1/1' ? ' ratio-square' : ''}`} style={{ aspectRatio: update.image_aspect_ratio || '16/9' }}>
+                        <img src={update.image_url} alt={update.title} />
+                    </div>
+                )}
+
                 <section className="detail-section">
                     <h2 className="detail-section-title">Details</h2>
                     {update.detail.content.map((p, i) => (

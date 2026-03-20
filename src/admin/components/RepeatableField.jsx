@@ -21,6 +21,7 @@ export default function RepeatableField({ values = [], onChange, multiline = fal
     <div className="repeatable-field">
       {values.map((val, i) => (
         <div key={i} className="repeatable-item">
+          <span className="repeatable-item-num">{String(i + 1).padStart(2, '0')}</span>
           {multiline ? (
             <textarea
               className="admin-textarea"
@@ -41,29 +42,36 @@ export default function RepeatableField({ values = [], onChange, multiline = fal
           <div className="repeatable-item-btns">
             <button
               type="button"
-              className="admin-btn admin-btn-secondary admin-btn-sm admin-btn-icon"
+              className="repeatable-ctrl"
               onClick={() => moveUp(i)}
               disabled={i === 0}
               title="Move up"
-            >↑</button>
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </button>
             <button
               type="button"
-              className="admin-btn admin-btn-secondary admin-btn-sm admin-btn-icon"
+              className="repeatable-ctrl"
               onClick={() => moveDown(i)}
               disabled={i === values.length - 1}
               title="Move down"
-            >↓</button>
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            </button>
             <button
               type="button"
-              className="admin-btn admin-btn-danger admin-btn-sm admin-btn-icon"
+              className="repeatable-ctrl repeatable-ctrl-danger"
               onClick={() => remove(i)}
               title="Remove"
-            >×</button>
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
           </div>
         </div>
       ))}
       <button type="button" className="repeatable-add" onClick={add}>
-        + Add item
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Add item
       </button>
     </div>
   );

@@ -46,6 +46,7 @@ export default function ToolForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [toast, setToast] = useState(false);
 
   useEffect(() => {
     supabase.from('skills').select('id, title').order('id').then(({ data }) => setAllSkills(data ?? []));
@@ -69,8 +70,13 @@ export default function ToolForm() {
     const { error: err } = isNew
       ? await supabase.from('tools_data').insert(form)
       : await supabase.from('tools_data').update(form).eq('id', id);
-    if (err) { setError(err.message); setSaving(false); }
-    else navigate('/admin/tools');
+    setSaving(false);
+    if (err) { setError(err.message); }
+    else {
+      setToast(true);
+      setTimeout(() => setToast(false), 2500);
+      if (isNew) navigate(`/admin/tools/${form.id}`, { replace: true });
+    }
   };
 
   const handleDelete = async () => {
@@ -84,6 +90,7 @@ export default function ToolForm() {
   return (
     <AdminLayout>
       {showConfirm && <ConfirmDialog name={form.name} onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
+      {toast && <div className="admin-toast">All changes have been saved</div>}
 
       <button className="admin-back" onClick={() => navigate('/admin/tools')} aria-label="Back to Tools">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -96,11 +103,6 @@ export default function ToolForm() {
           <h1 className="admin-page-title">{isNew ? 'New Tool' : form.name || 'Edit Tool'}</h1>
           <p className="admin-page-desc">{isNew ? 'Add a new tool to the evaluated tools list.' : `Editing ${form.category} tool`}</p>
         </div>
-        {!isNew && (
-          <button type="button" className="admin-btn admin-btn-danger" onClick={() => setShowConfirm(true)}>
-            Delete tool
-          </button>
-        )}
       </div>
 
       <form onSubmit={handleSave}>

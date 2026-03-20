@@ -16,6 +16,9 @@ create table if not exists skills (
   overview       text[]      default '{}',
   getting_started text[]     default '{}',
   tips           text[]      default '{}',
+  image_url      text,
+  image_aspect_ratio text    default '16/9',
+  image_rows     jsonb       default '[]',
   detail_tools   jsonb       default '[]',
   prompts        jsonb       default '[]',
   related_skills int[]       default '{}'
@@ -41,6 +44,8 @@ create table if not exists updates (
   title          text        not null,
   summary        text,
   tag            text,
+  image_url      text,
+  image_aspect_ratio text    default '16/9',
   content        text[]      default '{}',
   action_items   text[]      default '{}',
   affected_skills int[]      default '{}'

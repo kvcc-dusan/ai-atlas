@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
 import RepeatableField from './components/RepeatableField';
 import ToolMultiSelect from './components/ToolMultiSelect';
+import ImageRowsEditor from './components/ImageRowsEditor';
 import './admin.css';
 
 const CATEGORIES = ['CREATIVE', 'DEVELOPMENT', 'CONTENT', 'CORE SKILL', 'WORKFLOW', 'QA', 'PM', 'PRODUCTIVITY', 'REFERENCE', 'ADVANCED', 'POLICY'];
@@ -16,6 +17,7 @@ const EMPTY = {
   tools: [],
   status: 'active',
   last_updated: new Date().toISOString().slice(0, 10),
+  image_rows: [],
   overview: [],
   getting_started: [],
   tips: [],
@@ -51,6 +53,7 @@ export default function SkillForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [toast, setToast] = useState(false);
 
   useEffect(() => {
     supabase.from('skills').select('id, chapter, title').order('id').then(({ data }) => {
@@ -98,11 +101,24 @@ export default function SkillForm() {
     setError(null);
     const payload = { ...form };
     if (isNew) delete payload.id;
-    const { error: err } = isNew
-      ? await supabase.from('skills').insert(payload)
-      : await supabase.from('skills').update(payload).eq('id', id);
-    if (err) { setError(err.message); setSaving(false); }
-    else navigate('/admin/skills');
+    // Send null (not empty string) so the DB clears the value
+    if (!payload.image_url) payload.image_url = null;
+    // Clean image_rows: keep only rows that have at least one image
+    if (payload.image_rows) {
+      payload.image_rows = payload.image_rows.filter(r =>
+        r.type === 'wide' ? !!r.url : (r.urls?.[0] || r.urls?.[1])
+      );
+    }
+    const { error: err, data: inserted } = isNew
+      ? await supabase.from('skills').insert(payload).select()
+      : await supabase.from('skills').update(payload).eq('id', id).select();
+    setSaving(false);
+    if (err) { console.error('Save error:', err); setError(err.message); }
+    else {
+      setToast(true);
+      setTimeout(() => setToast(false), 2500);
+      if (isNew && inserted?.[0]?.id) navigate(`/admin/skills/${inserted[0].id}`, { replace: true });
+    }
   };
 
   const handleDelete = async () => {
@@ -116,6 +132,7 @@ export default function SkillForm() {
   return (
     <AdminLayout>
       {showConfirm && <ConfirmDialog onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
+      {toast && <div className="admin-toast">All changes have been saved</div>}
 
       <button className="admin-back" onClick={() => navigate('/admin/skills')} aria-label="Back to Skills">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -128,11 +145,6 @@ export default function SkillForm() {
           <h1 className="admin-page-title">{isNew ? 'New Skill' : form.title || 'Edit Skill'}</h1>
           <p className="admin-page-desc">{isNew ? 'Fill in the details below to add a new skill to the playbook.' : `Editing chapter ${form.chapter}`}</p>
         </div>
-        {!isNew && (
-          <button type="button" className="admin-btn admin-btn-danger" onClick={() => setShowConfirm(true)}>
-            Delete skill
-          </button>
-        )}
       </div>
 
       <form onSubmit={handleSave}>
@@ -259,7 +271,20 @@ export default function SkillForm() {
                 </div>
               </div>
             ))}
-            <button type="button" className="repeatable-add" onClick={addDetailTool}>+ Add tool</button>
+            <button type="button" className="repeatable-add" onClick={addDetailTool}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Add tool
+            </button>
+          </div>
+        </div>
+
+        {/* ── Images ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">Images</span>
+          </div>
+          <div className="admin-section-body">
+            <ImageRowsEditor rows={form.image_rows ?? []} onChange={(v) => set('image_rows', v)} />
           </div>
         </div>
 
@@ -291,7 +316,10 @@ export default function SkillForm() {
                 </div>
               </div>
             ))}
-            <button type="button" className="repeatable-add" onClick={addPrompt}>+ Add prompt</button>
+            <button type="button" className="repeatable-add" onClick={addPrompt}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Add prompt
+            </button>
           </div>
         </div>
 

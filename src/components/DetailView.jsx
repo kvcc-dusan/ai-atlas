@@ -183,6 +183,31 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
                             </ol>
                         </section>
 
+                        {skill.image_rows?.length > 0 && (
+                            <div className="detail-image-rows">
+                                {skill.image_rows.map((row, i) => (
+                                    row.type === 'wide' && row.url ? (
+                                        <div key={i} className="detail-image-row-wide">
+                                            <img src={row.url} alt="" />
+                                        </div>
+                                    ) : row.type === 'pair' && (row.urls?.[0] || row.urls?.[1]) ? (
+                                        <div key={i} className="detail-image-row-pair">
+                                            {row.urls[0] && (
+                                                <div className="detail-image-row-square">
+                                                    <img src={row.urls[0]} alt="" />
+                                                </div>
+                                            )}
+                                            {row.urls[1] && (
+                                                <div className="detail-image-row-square">
+                                                    <img src={row.urls[1]} alt="" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null
+                                ))}
+                            </div>
+                        )}
+
                         <section className="detail-section" data-section="prompts">
                             <h2 className="detail-section-title">Prompt Templates</h2>
                             {skill.detail.prompts.map((prompt, i) => (

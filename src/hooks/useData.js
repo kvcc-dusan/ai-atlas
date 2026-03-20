@@ -43,6 +43,9 @@ function mapSkill(row) {
     status: row.status,
     lastUpdated: row.last_updated,
     hasDetail: true,
+    image_url: row.image_url ?? '',
+    image_aspect_ratio: row.image_aspect_ratio ?? '16/9',
+    image_rows: row.image_rows ?? [],
     detail: {
       overview: row.overview ?? [],
       tools: row.detail_tools ?? [],
@@ -75,6 +78,8 @@ function mapUpdate(row) {
     title: row.title,
     summary: row.summary,
     tag: row.tag,
+    image_url: row.image_url ?? '',
+    image_aspect_ratio: row.image_aspect_ratio ?? '16/9',
     detail: {
       content: row.content ?? [],
       actionItems: row.action_items ?? [],

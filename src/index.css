@@ -1200,6 +1200,67 @@ a {
   margin-bottom: var(--space-3xl);
 }
 
+.detail-hero-image {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: var(--space-3xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+}
+
+.detail-hero-image.ratio-square {
+  width: 50%;
+}
+
+.detail-hero-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Skill image rows */
+.detail-image-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-3xl);
+}
+
+.detail-image-row-wide {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  aspect-ratio: 16/9;
+}
+
+.detail-image-row-wide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-image-row-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+.detail-image-row-square {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  aspect-ratio: 1/1;
+}
+
+.detail-image-row-square img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 .update-date {
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
