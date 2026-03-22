@@ -1,7 +1,8 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 export default function PreviewDrawer({ children, onClose }) {
-  return (
+  return createPortal(
     <div className="preview-drawer">
       <div className="preview-drawer-bar">
         <span className="preview-drawer-label">Preview — changes not saved yet</span>
@@ -15,6 +16,7 @@ export default function PreviewDrawer({ children, onClose }) {
       <div className="preview-drawer-body">
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

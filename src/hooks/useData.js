@@ -15,11 +15,22 @@ function useQuery(table, options = {}) {
       if (options.order) query = query.order(options.order, { ascending: options.ascending ?? true });
       if (options.eq) query = query.eq(options.eq[0], options.eq[1]);
 
-      const { data: rows, error: err } = await query;
-      if (!cancelled) {
-        setData(rows);
-        setError(err);
-        setLoading(false);
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 10000)
+      );
+
+      try {
+        const { data: rows, error: err } = await Promise.race([query, timeout]);
+        if (!cancelled) {
+          setData(rows);
+          setError(err);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err);
+          setLoading(false);
+        }
       }
     }
 

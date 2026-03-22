@@ -15,7 +15,7 @@ function useIsMobile(breakpoint = 768) {
     return isMobile;
 }
 
-export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'currentColor', lineWidth = 1, lineHeight = 24, isDark = false }) {
+export default function MagnetLines({ rows = 12, columns = 24, lineWidth = 1, lineHeight = 24, isDark = false }) {
     const containerRef = useRef(null);
     const prevAngles = useRef([]);
     const cumAngles = useRef([]);
@@ -54,13 +54,24 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
             });
         };
 
+        let rafId = null;
         const onPointerMove = (e) => {
-            updateLines(e.clientX, e.clientY);
+            if (rafId) return;
+            const x = e.clientX, y = e.clientY;
+            rafId = requestAnimationFrame(() => {
+                updateLines(x, y);
+                rafId = null;
+            });
         };
 
         const onTouchMove = (e) => {
             const touch = e.touches[0];
-            if (touch) updateLines(touch.clientX, touch.clientY);
+            if (!touch || rafId) return;
+            const x = touch.clientX, y = touch.clientY;
+            rafId = requestAnimationFrame(() => {
+                updateLines(x, y);
+                rafId = null;
+            });
         };
 
         const resetLines = () => {
@@ -80,6 +91,7 @@ export default function MagnetLines({ rows = 12, columns = 24, lineColor = 'curr
         container.addEventListener('touchend', resetLines);
 
         return () => {
+            if (rafId) cancelAnimationFrame(rafId);
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerleave', resetLines);
             container.removeEventListener('touchmove', onTouchMove);

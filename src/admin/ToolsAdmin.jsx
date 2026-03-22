@@ -17,7 +17,12 @@ export default function ToolsAdmin() {
       .from('tools_data')
       .select('id, name, provider, category, tier, status')
       .order('name')
-      .then(({ data }) => { setTools(data ?? []); setLoading(false); });
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load tools:', error.message);
+        setTools(data ?? []);
+        setLoading(false);
+      })
+      .catch((err) => { console.error('Tools fetch error:', err); setLoading(false); });
   }, []);
 
   const filtered = useMemo(() => {
@@ -27,7 +32,9 @@ export default function ToolsAdmin() {
     return tools.filter(t =>
       t.name?.toLowerCase().includes(q) ||
       t.provider?.toLowerCase().includes(q) ||
-      t.category?.toLowerCase().includes(q)
+      t.category?.toLowerCase().includes(q) ||
+      t.tier?.toLowerCase().includes(q) ||
+      t.status?.toLowerCase().includes(q)
     );
   }, [tools, search]);
 

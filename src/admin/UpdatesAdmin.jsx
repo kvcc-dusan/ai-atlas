@@ -22,7 +22,12 @@ export default function UpdatesAdmin() {
       .from('updates')
       .select('id, date, title, tag')
       .order('date', { ascending: false })
-      .then(({ data }) => { setUpdates(data ?? []); setLoading(false); });
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load articles:', error.message);
+        setUpdates(data ?? []);
+        setLoading(false);
+      })
+      .catch((err) => { console.error('Articles fetch error:', err); setLoading(false); });
   }, []);
 
   const filtered = useMemo(() => {

@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
 import RepeatableField from './components/RepeatableField';
-import ToolMultiSelect from './components/ToolMultiSelect';
+import MultiSelectDropdown from './components/MultiSelectDropdown';
+import SingleSelectDropdown from './components/SingleSelectDropdown';
 import ImageRowsEditor from './components/ImageRowsEditor';
+import PreviewDrawer from './previews/PreviewDrawer';
+import SkillPreview from './previews/SkillPreview';
 import './admin.css';
 
 const CATEGORIES = ['CREATIVE', 'DEVELOPMENT', 'CONTENT', 'CORE SKILL', 'WORKFLOW', 'QA', 'PM', 'PRODUCTIVITY', 'REFERENCE', 'ADVANCED', 'POLICY'];
@@ -27,13 +30,15 @@ const EMPTY = {
 };
 
 function ConfirmDialog({ onConfirm, onCancel }) {
+  const cancelRef = useRef(null);
+  useEffect(() => { cancelRef.current?.focus(); }, []);
   return (
-    <div className="admin-overlay">
-      <div className="admin-dialog">
-        <h3>Delete this skill?</h3>
+    <div className="admin-overlay" role="presentation">
+      <div className="admin-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+        <h3 id="confirm-dialog-title">Delete this skill?</h3>
         <p>This will permanently remove the skill and all its content from the public site. This cannot be undone.</p>
         <div className="admin-dialog-actions">
-          <button className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button ref={cancelRef} className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
           <button className="admin-btn admin-btn-danger" onClick={onConfirm}>Delete permanently</button>
         </div>
       </div>
@@ -47,12 +52,14 @@ export default function SkillForm() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(EMPTY);
+  const [overviewText, setOverviewText] = useState('');
   const [allSkills, setAllSkills] = useState([]);
   const [allTools, setAllTools] = useState([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [toast, setToast] = useState(false);
 
   useEffect(() => {
@@ -68,7 +75,13 @@ export default function SkillForm() {
     supabase.from('tools_data').select('id, name').order('name').then(({ data }) => setAllTools(data ?? []));
     if (!isNew) {
       supabase.from('skills').select('*').eq('id', id).single()
-        .then(({ data }) => { if (data) setForm(data); setLoading(false); });
+        .then(({ data }) => {
+          if (data) {
+            setForm(data);
+            setOverviewText((data.overview ?? []).join('\n\n'));
+          }
+          setLoading(false);
+        });
     }
   }, [id, isNew]);
 
@@ -90,16 +103,15 @@ export default function SkillForm() {
   const addPrompt = () => set('prompts', [...(form.prompts ?? []), { title: '', context: '', template: '' }]);
   const removePrompt = (i) => set('prompts', (form.prompts ?? []).filter((_, idx) => idx !== i));
 
-  const toggleRelated = (sid) => {
-    const cur = form.related_skills ?? [];
-    set('related_skills', cur.includes(sid) ? cur.filter((x) => x !== sid) : [...cur, sid]);
-  };
-
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     const payload = { ...form };
+    // Convert overview textarea (raw text) → array of paragraphs split by blank lines
+    payload.overview = overviewText.split(/\r?\n(\r?\n)+/).map(p => p.trim()).filter(Boolean);
+    // Auto-derive tool tags from recommended tools — no need to enter twice
+    payload.tools = (payload.detail_tools ?? []).map(t => t.name).filter(Boolean);
     if (isNew) delete payload.id;
     // Send null (not empty string) so the DB clears the value
     if (!payload.image_url) payload.image_url = null;
@@ -113,7 +125,7 @@ export default function SkillForm() {
       ? await supabase.from('skills').insert(payload).select()
       : await supabase.from('skills').update(payload).eq('id', id).select();
     setSaving(false);
-    if (err) { console.error('Save error:', err); setError(err.message); }
+    if (err) { console.error('Save error:', err); setError(`Save failed: ${err.message}`); }
     else {
       setToast(true);
       setTimeout(() => setToast(false), 2500);
@@ -132,6 +144,11 @@ export default function SkillForm() {
   return (
     <AdminLayout>
       {showConfirm && <ConfirmDialog onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
+      {showPreview && (
+        <PreviewDrawer onClose={() => setShowPreview(false)}>
+          <SkillPreview skill={form} />
+        </PreviewDrawer>
+      )}
       {toast && <div className="admin-toast">All changes have been saved</div>}
 
       <button className="admin-back" onClick={() => navigate('/admin/skills')} aria-label="Back to Skills">
@@ -145,6 +162,12 @@ export default function SkillForm() {
           <h1 className="admin-page-title">{isNew ? 'New Skill' : form.title || 'Edit Skill'}</h1>
           <p className="admin-page-desc">{isNew ? 'Fill in the details below to add a new skill to the playbook.' : `Editing chapter ${form.chapter}`}</p>
         </div>
+        <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowPreview(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+          </svg>
+          Preview
+        </button>
       </div>
 
       <form onSubmit={handleSave}>
@@ -202,41 +225,23 @@ export default function SkillForm() {
           </div>
         </div>
 
-        {/* ── Tool Tags ── */}
-        <div className="admin-section">
-          <div className="admin-section-header">
-            <span className="admin-section-title">Tool Tags</span>
-          </div>
-          <div className="admin-section-body">
-            <ToolMultiSelect values={form.tools ?? []} onChange={(v) => set('tools', v)} tools={allTools} />
-          </div>
-        </div>
-
-        {/* ── Detail Content ── */}
+        {/* ── Overview ── */}
         <div className="admin-section">
           <div className="admin-section-header">
             <span className="admin-section-title">Overview</span>
           </div>
           <div className="admin-section-body">
-            <RepeatableField values={form.overview ?? []} onChange={(v) => set('overview', v)} multiline placeholder="Write a paragraph…" />
-          </div>
-        </div>
-
-        <div className="admin-section">
-          <div className="admin-section-header">
-            <span className="admin-section-title">Getting Started</span>
-          </div>
-          <div className="admin-section-body">
-            <RepeatableField values={form.getting_started ?? []} onChange={(v) => set('getting_started', v)} multiline placeholder="Describe a step…" />
-          </div>
-        </div>
-
-        <div className="admin-section">
-          <div className="admin-section-header">
-            <span className="admin-section-title">Tips & Gotchas</span>
-          </div>
-          <div className="admin-section-body">
-            <RepeatableField values={form.tips ?? []} onChange={(v) => set('tips', v)} multiline placeholder="Add a tip or warning…" />
+            <div className="admin-field">
+              <p className="admin-field-hint">Type freely. Press Enter twice to start a new paragraph.</p>
+              <textarea
+                className="admin-textarea"
+                value={overviewText}
+                onChange={(e) => setOverviewText(e.target.value)}
+                rows={12}
+                placeholder="Write the skill overview here…"
+                style={{ resize: 'vertical', lineHeight: '1.7' }}
+              />
+            </div>
           </div>
         </div>
 
@@ -255,10 +260,12 @@ export default function SkillForm() {
                 <div className="structured-block-body">
                   <div className="admin-field">
                     <label className="admin-label">Tool name</label>
-                    <select className="admin-select" value={t.name ?? ''} onChange={(e) => updateDetailTool(i, 'name', e.target.value)}>
-                      <option value="">— Select a tool —</option>
-                      {allTools.map(tool => <option key={tool.id} value={tool.name}>{tool.name}</option>)}
-                    </select>
+                    <SingleSelectDropdown
+                      options={allTools.map(tool => ({ value: tool.name, label: tool.name }))}
+                      value={t.name ?? ''}
+                      onChange={(v) => updateDetailTool(i, 'name', v)}
+                      placeholder="— Select a tool —"
+                    />
                   </div>
                   <div className="admin-field">
                     <label className="admin-label">Best for</label>
@@ -275,6 +282,16 @@ export default function SkillForm() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               Add tool
             </button>
+          </div>
+        </div>
+
+        {/* ── Getting Started ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">Getting Started</span>
+          </div>
+          <div className="admin-section-body">
+            <RepeatableField values={form.getting_started ?? []} onChange={(v) => set('getting_started', v)} multiline placeholder="Describe a step…" />
           </div>
         </div>
 
@@ -323,24 +340,28 @@ export default function SkillForm() {
           </div>
         </div>
 
+        {/* ── Tips & Gotchas ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">Tips & Gotchas</span>
+          </div>
+          <div className="admin-section-body">
+            <RepeatableField values={form.tips ?? []} onChange={(v) => set('tips', v)} multiline placeholder="Add a tip or warning…" />
+          </div>
+        </div>
+
         {/* ── Related Skills ── */}
         <div className="admin-section">
           <div className="admin-section-header">
             <span className="admin-section-title">Related Skills</span>
           </div>
           <div className="admin-section-body">
-            <div className="admin-checkbox-list">
-              {allSkills.filter((s) => String(s.id) !== String(id)).map((s) => (
-                <label key={s.id} className="admin-checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={(form.related_skills ?? []).includes(s.id)}
-                    onChange={() => toggleRelated(s.id)}
-                  />
-                  {s.title}
-                </label>
-              ))}
-            </div>
+            <MultiSelectDropdown
+              options={allSkills.filter(s => String(s.id) !== String(id)).map(s => ({ value: s.id, label: s.title }))}
+              selected={form.related_skills ?? []}
+              onChange={(v) => set('related_skills', v)}
+              placeholder="Select related skills…"
+            />
           </div>
         </div>
 

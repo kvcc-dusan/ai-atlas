@@ -59,18 +59,23 @@ function UploadZone({ onUploaded, label, aspectRatio }) {
 function ImageThumb({ url, aspectRatio, onReplace, onRemove }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
 
   const replace = async (file) => {
     if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > 10 * 1024 * 1024) return;
+    if (file.size > 10 * 1024 * 1024) { setError('Max 10 MB'); return; }
     setUploading(true);
+    setError(null);
     const ext = file.name.split('.').pop();
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { error: err } = await supabase.storage.from(BUCKET).upload(path, file, { cacheControl: '31536000', upsert: false });
-    if (!err) {
-      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      onReplace(data.publicUrl);
+    if (err) {
+      setError(err.message);
+      setUploading(false);
+      return;
     }
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    onReplace(data.publicUrl);
     setUploading(false);
   };
 
@@ -85,6 +90,7 @@ function ImageThumb({ url, aspectRatio, onReplace, onRemove }) {
         <button type="button" className="admin-btn admin-btn-danger admin-btn-sm" onClick={onRemove}>Remove</button>
       </div>
       <input ref={inputRef} type="file" accept="image/*" onChange={(e) => replace(e.target.files?.[0])} hidden />
+      {error && <div className="admin-error" style={{ marginTop: '0.375rem', fontSize: '0.75rem' }}>{error}</div>}
     </div>
   );
 }
@@ -124,7 +130,7 @@ export default function ImageRowsEditor({ rows, onChange }) {
         <div key={i} className="structured-block">
           <div className="structured-block-header">
             <span className="structured-block-num">
-              {row.type === 'wide' ? `Image row ${i + 1}` : `Image row ${i + 1}`}
+              {row.type === 'wide' ? `Wide image ${i + 1}` : `Split image ${i + 1}`}
             </span>
             <div style={{ display: 'flex', gap: '0.375rem' }}>
               {i > 0 && (

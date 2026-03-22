@@ -1,9 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { skills, toolsData, updates } from '../data';
 
 export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdateClick, onToolClick }) {
     const [query, setQuery] = useState('');
     const inputRef = useRef(null);
+    const modalRef = useRef(null);
+    const navigate = useNavigate();
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && query.trim().toLowerCase() === 'admin') {
+            onClose();
+            navigate('/admin');
+        }
+    };
 
     useEffect(() => {
         if (isOpen) {
@@ -17,6 +27,25 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
         document.addEventListener('keydown', handler);
         return () => document.removeEventListener('keydown', handler);
     }, [onClose]);
+
+    // Focus trap
+    useEffect(() => {
+        if (!isOpen) return;
+        const trap = (e) => {
+            if (e.key !== 'Tab' || !modalRef.current) return;
+            const focusable = modalRef.current.querySelectorAll('button, input, [tabindex="0"]');
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey) {
+                if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+            } else {
+                if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
+        };
+        document.addEventListener('keydown', trap);
+        return () => document.removeEventListener('keydown', trap);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -42,8 +71,8 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
     const hasResults = matchedSkills.length || matchedTools.length || matchedUpdates.length;
 
     return (
-        <div className="cmd-overlay" onClick={onClose}>
-            <div className="cmd-modal" onClick={e => e.stopPropagation()}>
+        <div className="cmd-overlay" onClick={onClose} role="presentation">
+            <div className="cmd-modal" ref={modalRef} role="dialog" aria-modal="true" aria-label="Search" onClick={e => e.stopPropagation()}>
                 <div className="cmd-input-wrap">
                     <svg className="cmd-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
@@ -54,6 +83,7 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
                         placeholder="Search skills, tools, articles…"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
+                        onKeyDown={handleKeyDown}
                     />
                     <span className="cmd-esc-hint">esc</span>
                 </div>

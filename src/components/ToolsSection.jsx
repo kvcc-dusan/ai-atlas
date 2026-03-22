@@ -6,6 +6,7 @@ export function ToolTag({ tool, onClick }) {
         <span
             className={`card-tool-tag ${onClick ? 'clickable' : ''}`}
             onClick={(e) => onClick && onClick(e, tool)}
+            onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onClick(e, tool); } }}
             role={onClick ? 'button' : undefined}
             tabIndex={onClick ? 0 : undefined}
         >

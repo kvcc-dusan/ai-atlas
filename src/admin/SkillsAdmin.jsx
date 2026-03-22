@@ -15,7 +15,12 @@ export default function SkillsAdmin() {
       .from('skills')
       .select('id, chapter, category, title, status, last_updated')
       .order('id')
-      .then(({ data }) => { setSkills(data ?? []); setLoading(false); });
+      .then(({ data, error }) => {
+        if (error) console.error('Failed to load skills:', error.message);
+        setSkills(data ?? []);
+        setLoading(false);
+      })
+      .catch((err) => { console.error('Skills fetch error:', err); setLoading(false); });
   }, []);
 
   const filtered = useMemo(() => {

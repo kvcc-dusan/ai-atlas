@@ -4,7 +4,10 @@ const STORAGE_KEY = 'ai-playbook-analytics';
 
 export function useAnalytics() {
     const track = useCallback((name, properties = {}) => {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+            .filter(e => now - new Date(e.timestamp).getTime() < THIRTY_DAYS);
         stored.push({
             event: name,
             timestamp: new Date().toISOString(),

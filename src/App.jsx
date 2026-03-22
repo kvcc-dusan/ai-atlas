@@ -187,6 +187,7 @@ export default function App() {
         <Route path="/admin/updates" element={<ProtectedRoute><UpdatesAdmin /></ProtectedRoute>} />
         <Route path="/admin/updates/:id" element={<ProtectedRoute><UpdateForm /></ProtectedRoute>} />
         <Route path="/admin/preview" element={<ProtectedRoute><SitePreview /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
       {!isAdmin && <Footer />}

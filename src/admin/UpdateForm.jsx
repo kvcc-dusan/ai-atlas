@@ -1,34 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
 import RepeatableField from './components/RepeatableField';
+import MultiSelectDropdown from './components/MultiSelectDropdown';
 import ImageUpload from './components/ImageUpload';
+import PreviewDrawer from './previews/PreviewDrawer';
+import UpdatePreview from './previews/UpdatePreview';
 import './admin.css';
 
 const TAGS = ['Model update', 'New tool', 'Policy change', 'New skill'];
 
-const EMPTY = {
-  id: '',
-  date: new Date().toISOString().slice(0, 10),
-  title: '',
-  summary: '',
-  tag: 'Model update',
-  image_url: '',
-  image_aspect_ratio: '16/9',
-  content: [],
-  action_items: [],
-  affected_skills: [],
-};
+function makeEmpty() {
+  return {
+    id: `update-${crypto.randomUUID().slice(0, 8)}`,
+    date: new Date().toISOString().slice(0, 10),
+    title: '',
+    summary: '',
+    tag: 'Model update',
+    image_url: '',
+    image_aspect_ratio: '16/9',
+    content: [],
+    action_items: [],
+    affected_skills: [],
+  };
+}
 
 function ConfirmDialog({ title, onConfirm, onCancel }) {
+  const cancelRef = useRef(null);
+  useEffect(() => { cancelRef.current?.focus(); }, []);
   return (
-    <div className="admin-overlay">
-      <div className="admin-dialog">
-        <h3>Delete this article?</h3>
+    <div className="admin-overlay" role="presentation">
+      <div className="admin-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+        <h3 id="confirm-dialog-title">Delete this article?</h3>
         <p>"{title}" will be permanently removed and disappear from the homepage carousel. This cannot be undone.</p>
         <div className="admin-dialog-actions">
-          <button className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button ref={cancelRef} className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
           <button className="admin-btn admin-btn-danger" onClick={onConfirm}>Delete permanently</button>
         </div>
       </div>
@@ -41,47 +48,45 @@ export default function UpdateForm() {
   const isNew = id === 'new';
   const navigate = useNavigate();
 
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState(() => isNew ? makeEmpty() : { id: '', date: '', title: '', summary: '', tag: 'Model update', image_url: '', image_aspect_ratio: '16/9', content: [], action_items: [], affected_skills: [] });
+  const [contentText, setContentText] = useState('');
   const [allSkills, setAllSkills] = useState([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [toast, setToast] = useState(false);
 
   useEffect(() => {
     supabase.from('skills').select('id, title').order('id').then(({ data }) => setAllSkills(data ?? []));
-    if (isNew) {
-      supabase.from('updates').select('id').then(({ data }) => {
-        const nums = (data ?? []).map(r => parseInt(r.id.replace('update-', ''), 10)).filter(n => !isNaN(n) && n > 0);
-        const next = Math.max(0, ...nums) + 1;
-        setForm(f => ({ ...f, id: `update-${next}` }));
-      });
-    } else {
+    if (!isNew) {
       supabase.from('updates').select('*').eq('id', id).single()
-        .then(({ data }) => { if (data) setForm(data); setLoading(false); });
+        .then(({ data }) => {
+          if (data) {
+            setForm(data);
+            setContentText((data.content ?? []).join('\n\n'));
+          }
+          setLoading(false);
+        });
     }
   }, [id, isNew]);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
-
-  const toggleSkill = (sid) => {
-    const cur = form.affected_skills ?? [];
-    set('affected_skills', cur.includes(sid) ? cur.filter((x) => x !== sid) : [...cur, sid]);
-  };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
     const payload = { ...form };
+    payload.content = contentText.split(/\r?\n(\r?\n)+/).map(p => p.trim()).filter(Boolean);
     // Send null (not empty string) so the DB clears the value
     if (!payload.image_url) payload.image_url = null;
     const { error: err } = isNew
       ? await supabase.from('updates').insert(payload)
       : await supabase.from('updates').update(payload).eq('id', id);
     setSaving(false);
-    if (err) { console.error('Save error:', err); setError(err.message); }
+    if (err) { console.error('Save error:', err); setError(`Save failed: ${err.message}`); }
     else {
       setToast(true);
       setTimeout(() => setToast(false), 2500);
@@ -100,6 +105,11 @@ export default function UpdateForm() {
   return (
     <AdminLayout>
       {showConfirm && <ConfirmDialog title={form.title} onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
+      {showPreview && (
+        <PreviewDrawer onClose={() => setShowPreview(false)}>
+          <UpdatePreview update={form} />
+        </PreviewDrawer>
+      )}
       {toast && <div className="admin-toast">All changes have been saved</div>}
 
       <button className="admin-back" onClick={() => navigate('/admin/updates')} aria-label="Back to Articles">
@@ -113,6 +123,12 @@ export default function UpdateForm() {
           <h1 className="admin-page-title">{isNew ? 'New Article' : form.title || 'Edit Article'}</h1>
           <p className="admin-page-desc">{isNew ? 'Add a new update to the homepage carousel.' : `Editing ${form.tag ?? 'article'}`}</p>
         </div>
+        <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowPreview(true)}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+          </svg>
+          Preview
+        </button>
       </div>
 
       <form onSubmit={handleSave}>
@@ -196,7 +212,17 @@ export default function UpdateForm() {
             <span className="admin-section-title">Article Content</span>
           </div>
           <div className="admin-section-body">
-            <RepeatableField values={form.content ?? []} onChange={(v) => set('content', v)} multiline placeholder="Write a paragraph…" />
+            <div className="admin-field">
+              <p className="admin-field-hint">Type freely. Press Enter twice to start a new paragraph.</p>
+              <textarea
+                className="admin-textarea"
+                value={contentText}
+                onChange={(e) => setContentText(e.target.value)}
+                rows={12}
+                placeholder="Write the article content here…"
+                style={{ resize: 'vertical', lineHeight: '1.7' }}
+              />
+            </div>
           </div>
         </div>
 
@@ -214,18 +240,12 @@ export default function UpdateForm() {
             <span className="admin-section-title">Affected Skills</span>
           </div>
           <div className="admin-section-body">
-            <div className="admin-checkbox-list">
-              {allSkills.map((s) => (
-                <label key={s.id} className="admin-checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={(form.affected_skills ?? []).includes(s.id)}
-                    onChange={() => toggleSkill(s.id)}
-                  />
-                  {s.title}
-                </label>
-              ))}
-            </div>
+            <MultiSelectDropdown
+              options={allSkills.map(s => ({ value: s.id, label: s.title }))}
+              selected={form.affected_skills ?? []}
+              onChange={(v) => set('affected_skills', v)}
+              placeholder="Select affected skills…"
+            />
           </div>
         </div>
 

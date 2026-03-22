@@ -28,12 +28,25 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
         );
 
         sections.forEach((s) => observer.observe(s));
-        return () => observer.disconnect();
+
+        const handleScroll = () => {
+            const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+            if (nearBottom) {
+                const last = sections[sections.length - 1];
+                if (last) setActiveSection(last.dataset.section);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, [skill]);
 
     if (loading) {
         return (
-            <div className="detail-view">
+            <div className="detail-view detail-view--skill">
                 <div className="container">
                     <button className="detail-back" onClick={onBack}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -48,7 +61,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
 
     if (!skill) {
         return (
-            <div className="detail-view">
+            <div className="detail-view detail-view--skill">
                 <div className="container">
                     <button className="detail-back" onClick={onBack}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -95,7 +108,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
     };
 
     return (
-        <div className="detail-view">
+        <div className="detail-view detail-view--skill">
             <div className="container">
                 <button className="detail-back" onClick={onBack} aria-label="Back">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -188,18 +201,18 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
                                 {skill.image_rows.map((row, i) => (
                                     row.type === 'wide' && row.url ? (
                                         <div key={i} className="detail-image-row-wide">
-                                            <img src={row.url} alt="" />
+                                            <img src={row.url} alt="" loading="lazy" />
                                         </div>
                                     ) : row.type === 'pair' && (row.urls?.[0] || row.urls?.[1]) ? (
                                         <div key={i} className="detail-image-row-pair">
                                             {row.urls[0] && (
                                                 <div className="detail-image-row-square">
-                                                    <img src={row.urls[0]} alt="" />
+                                                    <img src={row.urls[0]} alt="" loading="lazy" />
                                                 </div>
                                             )}
                                             {row.urls[1] && (
                                                 <div className="detail-image-row-square">
-                                                    <img src={row.urls[1]} alt="" />
+                                                    <img src={row.urls[1]} alt="" loading="lazy" />
                                                 </div>
                                             )}
                                         </div>

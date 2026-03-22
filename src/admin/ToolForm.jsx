@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
-import RepeatableField from './components/RepeatableField';
 import './admin.css';
 
 const CATEGORIES = ['LLM', 'IDE', 'IMAGE GEN', 'CODE REVIEW', 'DESIGN', 'TESTING', 'PRODUCTIVITY', 'OTHER'];
@@ -15,19 +14,19 @@ const EMPTY = {
   category: 'LLM',
   status: 'approved',
   description: '',
-  best_for: [],
-  used_in_skills: [],
   tier: 'SECONDARY',
 };
 
 function ConfirmDialog({ name, onConfirm, onCancel }) {
+  const cancelRef = useRef(null);
+  useEffect(() => { cancelRef.current?.focus(); }, []);
   return (
-    <div className="admin-overlay">
-      <div className="admin-dialog">
-        <h3>Delete "{name}"?</h3>
+    <div className="admin-overlay" role="presentation">
+      <div className="admin-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
+        <h3 id="confirm-dialog-title">Delete "{name}"?</h3>
         <p>This will permanently remove this tool. This cannot be undone.</p>
         <div className="admin-dialog-actions">
-          <button className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
+          <button ref={cancelRef} className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
           <button className="admin-btn admin-btn-danger" onClick={onConfirm}>Delete permanently</button>
         </div>
       </div>
@@ -41,7 +40,6 @@ export default function ToolForm() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState(EMPTY);
-  const [allSkills, setAllSkills] = useState([]);
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -49,7 +47,6 @@ export default function ToolForm() {
   const [toast, setToast] = useState(false);
 
   useEffect(() => {
-    supabase.from('skills').select('id, title').order('id').then(({ data }) => setAllSkills(data ?? []));
     if (!isNew) {
       supabase.from('tools_data').select('*').eq('id', id).single()
         .then(({ data }) => { if (data) setForm(data); setLoading(false); });
@@ -57,11 +54,6 @@ export default function ToolForm() {
   }, [id, isNew]);
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
-
-  const toggleSkill = (sid) => {
-    const cur = form.used_in_skills ?? [];
-    set('used_in_skills', cur.includes(sid) ? cur.filter((x) => x !== sid) : [...cur, sid]);
-  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -71,7 +63,7 @@ export default function ToolForm() {
       ? await supabase.from('tools_data').insert(form)
       : await supabase.from('tools_data').update(form).eq('id', id);
     setSaving(false);
-    if (err) { setError(err.message); }
+    if (err) { console.error('Save error:', err); setError(`Save failed: ${err.message}`); }
     else {
       setToast(true);
       setTimeout(() => setToast(false), 2500);
@@ -114,14 +106,12 @@ export default function ToolForm() {
           <div className="admin-section-body">
             <div className="admin-row cols-2">
               <div className="admin-field">
-                <div className="admin-field-header">
-                  <label className="admin-label">
-                    URL slug
-                    <span className="admin-slug-badge" title="This is the unique ID used in the database. Use lowercase letters and hyphens only. Cannot be changed after creation. Example: 'github-copilot'">ID</span>
-                  </label>
-                  <p className="admin-field-hint">Unique identifier — lowercase, hyphens only, no spaces. Set once, can't change.</p>
-                </div>
+                <label className="admin-label" htmlFor="tool-slug">
+                  URL slug
+                  <span className="admin-slug-badge" title="Unique ID used in the database. Lowercase, hyphens only. Set once, can't change.">ID</span>
+                </label>
                 <input
+                  id="tool-slug"
                   className="admin-input mono"
                   value={form.id}
                   onChange={(e) => set('id', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
@@ -131,26 +121,19 @@ export default function ToolForm() {
                 />
               </div>
               <div className="admin-field">
-                <div className="admin-field-header">
-                  <label className="admin-label">Display name</label>
-                  <p className="admin-field-hint">The name shown to users everywhere on the site</p>
-                </div>
-                <input className="admin-input" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. GitHub Copilot" required />
+                <label className="admin-label" htmlFor="tool-name">Display name</label>
+                <input id="tool-name" className="admin-input" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. GitHub Copilot" required />
               </div>
             </div>
 
             <div className="admin-row cols-2">
               <div className="admin-field">
-                <div className="admin-field-header">
-                  <label className="admin-label">Provider / Company</label>
-                </div>
-                <input className="admin-input" value={form.provider} onChange={(e) => set('provider', e.target.value)} placeholder="e.g. GitHub / Microsoft" />
+                <label className="admin-label" htmlFor="tool-provider">Provider / Company</label>
+                <input id="tool-provider" className="admin-input" value={form.provider} onChange={(e) => set('provider', e.target.value)} placeholder="e.g. GitHub / Microsoft" />
               </div>
               <div className="admin-field">
-                <div className="admin-field-header">
-                  <label className="admin-label">Category</label>
-                </div>
-                <select className="admin-select" value={form.category} onChange={(e) => set('category', e.target.value)}>
+                <label className="admin-label" htmlFor="tool-category">Category</label>
+                <select id="tool-category" className="admin-select" value={form.category} onChange={(e) => set('category', e.target.value)}>
                   {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
@@ -158,18 +141,14 @@ export default function ToolForm() {
 
             <div className="admin-row cols-2">
               <div className="admin-field">
-                <div className="admin-field-header">
-                  <label className="admin-label">Tier</label>
-                </div>
-                <select className="admin-select" value={form.tier} onChange={(e) => set('tier', e.target.value)}>
+                <label className="admin-label" htmlFor="tool-tier">Tier</label>
+                <select id="tool-tier" className="admin-select" value={form.tier} onChange={(e) => set('tier', e.target.value)}>
                   {TIERS.map((t) => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div className="admin-field">
-                <div className="admin-field-header">
-                  <label className="admin-label">Approval status</label>
-                </div>
-                <select className="admin-select" value={form.status} onChange={(e) => set('status', e.target.value)}>
+                <label className="admin-label" htmlFor="tool-status">Approval status</label>
+                <select id="tool-status" className="admin-select" value={form.status} onChange={(e) => set('status', e.target.value)}>
                   <option value="approved">Approved</option>
                   <option value="under-review">Under review</option>
                   <option value="restricted">Restricted</option>
@@ -185,37 +164,8 @@ export default function ToolForm() {
           </div>
           <div className="admin-section-body">
             <div className="admin-field">
-              <div className="admin-field-header">
-                <label className="admin-label">Description</label>
-              </div>
-              <textarea className="admin-textarea" rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Describe what this tool does and when to use it…" />
-            </div>
-            <div className="admin-field">
-              <div className="admin-field-header">
-                <label className="admin-label">Best for</label>
-              </div>
-              <RepeatableField values={form.best_for ?? []} onChange={(v) => set('best_for', v)} placeholder="e.g. Code generation" />
-            </div>
-          </div>
-        </div>
-
-        <div className="admin-section">
-          <div className="admin-section-header">
-            <span className="admin-section-title">Used in Skills</span>
-          </div>
-          <div className="admin-section-body">
-            <p className="admin-field-hint" style={{ marginTop: '-0.25rem' }}>Which skills reference this tool?</p>
-            <div className="admin-checkbox-list">
-              {allSkills.map((s) => (
-                <label key={s.id} className="admin-checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={(form.used_in_skills ?? []).includes(s.id)}
-                    onChange={() => toggleSkill(s.id)}
-                  />
-                  {s.title}
-                </label>
-              ))}
+              <label className="admin-label" htmlFor="tool-description">Description</label>
+              <textarea id="tool-description" className="admin-textarea" rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Describe what this tool does and when to use it…" />
             </div>
           </div>
         </div>

@@ -2,13 +2,6 @@ import React from 'react';
 import { useStats } from '../hooks/useData';
 import { useCountUp } from '../hooks/useCountUp';
 import MagnetLines from './MagnetLines';
-// FlickeringGrid hidden but kept for reference
-// import { FlickeringGrid } from './FlickeringGrid';
-
-// Light mode palette (kept for FlickeringGrid)
-// const LIGHT_COLORS = ['#EDEDF0','#E4E4E7','#D4D4D8','#E1FCAD'];
-// Dark mode palette (kept for FlickeringGrid)
-// const DARK_COLORS = ['#141415','#1A1A1D','#27272A','#4E573F'];
 
 function StatBlock({ stat }) {
     const { count, ref } = useCountUp(stat.value, 1400);
