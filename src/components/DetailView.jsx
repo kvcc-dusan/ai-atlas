@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSkillById, useSkills } from '../hooks/useData';
 import CopyIcon from '../assets/icons/copy.svg';
+import GlowImage from './GlowImage';
 
-export default function DetailView({ onBack, onNavigate, onToolClick }) {
+export default function DetailView({ onBack, onNavigate, onToolClick, markRead }) {
     const { id } = useParams();
     const { data: skill, loading } = useSkillById(parseInt(id, 10));
     const { data: allSkills } = useSkills();
 
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [activeSection, setActiveSection] = useState('overview');
+
+    useEffect(() => {
+        if (skill?.id) markRead?.(skill.id);
+    }, [skill?.id]);
 
     useEffect(() => {
         if (!skill) return;
@@ -30,7 +35,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
         sections.forEach((s) => observer.observe(s));
 
         const handleScroll = () => {
-            const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+            const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
             if (nearBottom) {
                 const last = sections[sections.length - 1];
                 if (last) setActiveSection(last.dataset.section);
@@ -42,7 +47,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
             observer.disconnect();
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [skill]);
+    }, [skill, allSkills]);
 
     if (loading) {
         return (
@@ -200,20 +205,14 @@ export default function DetailView({ onBack, onNavigate, onToolClick }) {
                             <div className="detail-image-rows">
                                 {skill.image_rows.map((row, i) => (
                                     row.type === 'wide' && row.url ? (
-                                        <div key={i} className="detail-image-row-wide">
-                                            <img src={row.url} alt="" loading="lazy" />
-                                        </div>
+                                        <GlowImage key={i} url={row.url} className="detail-image-row-wide" />
                                     ) : row.type === 'pair' && (row.urls?.[0] || row.urls?.[1]) ? (
                                         <div key={i} className="detail-image-row-pair">
                                             {row.urls[0] && (
-                                                <div className="detail-image-row-square">
-                                                    <img src={row.urls[0]} alt="" loading="lazy" />
-                                                </div>
+                                                <GlowImage url={row.urls[0]} className="detail-image-row-square" />
                                             )}
                                             {row.urls[1] && (
-                                                <div className="detail-image-row-square">
-                                                    <img src={row.urls[1]} alt="" loading="lazy" />
-                                                </div>
+                                                <GlowImage url={row.urls[1]} className="detail-image-row-square" />
                                             )}
                                         </div>
                                     ) : null

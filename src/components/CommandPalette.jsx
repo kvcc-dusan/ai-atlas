@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { skills, toolsData, updates } from '../data';
 
-export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdateClick, onToolClick }) {
+export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdateClick, onToolClick, liveSkills, liveTools, liveUpdates }) {
     const [query, setQuery] = useState('');
     const inputRef = useRef(null);
     const modalRef = useRef(null);
@@ -47,28 +46,58 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
         return () => document.removeEventListener('keydown', trap);
     }, [isOpen]);
 
+    // Build flat prompts list from live Supabase skills
+    const allPrompts = useMemo(() => {
+        if (!liveSkills) return [];
+        const result = [];
+        liveSkills.forEach(skill => {
+            const prompts = skill.detail?.prompts;
+            if (!prompts?.length) return;
+            prompts.forEach((p, i) => {
+                result.push({
+                    ...p,
+                    skillId: skill.id,
+                    skillTitle: skill.title,
+                    skillChapter: skill.chapter,
+                    category: skill.category,
+                    key: `${skill.id}-${i}`,
+                });
+            });
+        });
+        return result;
+    }, [liveSkills]);
+
     if (!isOpen) return null;
 
     const q = query.toLowerCase().trim();
 
     const matchedSkills = !q
-        ? skills.slice(0, 5)
-        : skills.filter(s =>
-            s.title.toLowerCase().includes(q) ||
-            s.brief.toLowerCase().includes(q) ||
-            s.tools.some(t => t.toLowerCase().includes(q)) ||
-            s.category.toLowerCase().includes(q)
+        ? (liveSkills ?? []).slice(0, 5)
+        : (liveSkills ?? []).filter(s =>
+            s.title?.toLowerCase().includes(q) ||
+            s.brief?.toLowerCase().includes(q) ||
+            s.tools?.some(t => t.toLowerCase().includes(q)) ||
+            s.category?.toLowerCase().includes(q)
         ).slice(0, 6);
 
-    const matchedTools = toolsData.filter(t =>
-        !q || t.name.toLowerCase().includes(q) || t.provider.toLowerCase().includes(q) || t.category.toLowerCase().includes(q)
+    const matchedTools = (liveTools ?? []).filter(t =>
+        !q || t.name?.toLowerCase().includes(q) || t.provider?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q)
     ).slice(0, !q ? 0 : 4);
 
-    const matchedUpdates = updates.filter(u =>
-        !q || u.title.toLowerCase().includes(q) || u.summary.toLowerCase().includes(q)
+    const matchedUpdates = (liveUpdates ?? []).filter(u =>
+        !q || u.title?.toLowerCase().includes(q) || u.summary?.toLowerCase().includes(q)
     ).slice(0, !q ? 0 : 3);
 
-    const hasResults = matchedSkills.length || matchedTools.length || matchedUpdates.length;
+    const matchedPrompts = !q
+        ? []
+        : allPrompts.filter(p =>
+            p.title?.toLowerCase().includes(q) ||
+            p.template?.toLowerCase().includes(q) ||
+            p.context?.toLowerCase().includes(q) ||
+            p.skillTitle?.toLowerCase().includes(q)
+        ).slice(0, 4);
+
+    const hasResults = matchedSkills.length || matchedTools.length || matchedUpdates.length || matchedPrompts.length;
 
     return (
         <div className="cmd-overlay" onClick={onClose} role="presentation">
@@ -80,7 +109,7 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
                     <input
                         ref={inputRef}
                         className="cmd-input"
-                        placeholder="Search skills, tools, articles…"
+                        placeholder="Search skills, tools, prompts, articles…"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -94,7 +123,7 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
                     )}
 
                     {!q && (
-                        <p className="cmd-hint">Start typing to search skills, tools, and articles&hellip;</p>
+                        <p className="cmd-hint">Start typing to search skills, tools, prompts and articles&hellip;</p>
                     )}
 
                     {matchedSkills.length > 0 && (
@@ -109,6 +138,27 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
                                     <span className="cmd-item-num">{skill.chapter}</span>
                                     <span className="cmd-item-title">{skill.title}</span>
                                     <span className="cmd-item-tag">{skill.category}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {matchedPrompts.length > 0 && (
+                        <div className="cmd-group">
+                            <span className="cmd-group-label">Prompts</span>
+                            {matchedPrompts.map(prompt => (
+                                <button
+                                    key={prompt.key}
+                                    className="cmd-item"
+                                    onClick={() => {
+                                        onClose();
+                                        navigate(`/prompts?highlight=${encodeURIComponent(prompt.key)}`);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                >
+                                    <span className="cmd-item-num">{prompt.skillChapter}</span>
+                                    <span className="cmd-item-title">{prompt.title}</span>
+                                    <span className="cmd-item-tag">{prompt.category}</span>
                                 </button>
                             ))}
                         </div>
@@ -140,7 +190,7 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
                                     className="cmd-item"
                                     onClick={() => { onUpdateClick(u.id); onClose(); }}
                                 >
-                                    <span className="cmd-item-num">{u.date}</span>
+                                    <span className="cmd-item-num">{u.tag}</span>
                                     <span className="cmd-item-title">{u.title}</span>
                                 </button>
                             ))}

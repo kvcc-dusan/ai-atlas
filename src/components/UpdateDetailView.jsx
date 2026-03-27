@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useUpdateById, useSkills } from '../hooks/useData';
+import GlowImage from './GlowImage';
 
 export default function UpdateDetailView({ onBack, onSkillClick }) {
     const { id } = useParams();
@@ -60,9 +61,11 @@ export default function UpdateDetailView({ onBack, onSkillClick }) {
                 <div className="detail-divider" />
 
                 {update.image_url && (
-                    <div className={`detail-hero-image${update.image_aspect_ratio === '1/1' ? ' ratio-square' : ''}`} style={{ aspectRatio: update.image_aspect_ratio || '16/9' }}>
-                        <img src={update.image_url} alt={update.title} />
-                    </div>
+                    <GlowImage
+                        url={update.image_url}
+                        className={`detail-hero-image${update.image_aspect_ratio === '1/1' ? ' ratio-square' : ''}`}
+                        style={{ aspectRatio: update.image_aspect_ratio || '16/9' }}
+                    />
                 )}
 
                 <section className="detail-section">

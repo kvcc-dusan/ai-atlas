@@ -854,7 +854,7 @@ export const activeCategories = (() => {
   return ['ALL', ...Array.from(cats)];
 })();
 
-export const navItems = ['Skills', 'Tools', 'Articles'];
+export const navItems = ['Skills', 'Tools', 'Articles', 'Prompts'];
 
 export const stats = [
   { value: skills.length, label: 'Skills documented' },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
@@ -7,6 +7,7 @@ import MultiSelectDropdown from './components/MultiSelectDropdown';
 import ImageUpload from './components/ImageUpload';
 import PreviewDrawer from './previews/PreviewDrawer';
 import UpdatePreview from './previews/UpdatePreview';
+import ConfirmDialog from './components/ConfirmDialog';
 import './admin.css';
 
 const TAGS = ['Model update', 'New tool', 'Policy change', 'New skill'];
@@ -26,22 +27,6 @@ function makeEmpty() {
   };
 }
 
-function ConfirmDialog({ title, onConfirm, onCancel }) {
-  const cancelRef = useRef(null);
-  useEffect(() => { cancelRef.current?.focus(); }, []);
-  return (
-    <div className="admin-overlay" role="presentation">
-      <div className="admin-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-dialog-title">
-        <h3 id="confirm-dialog-title">Delete this article?</h3>
-        <p>"{title}" will be permanently removed and disappear from the homepage carousel. This cannot be undone.</p>
-        <div className="admin-dialog-actions">
-          <button ref={cancelRef} className="admin-btn admin-btn-secondary" onClick={onCancel}>Cancel</button>
-          <button className="admin-btn admin-btn-danger" onClick={onConfirm}>Delete permanently</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function UpdateForm() {
   const { id } = useParams();
@@ -104,7 +89,7 @@ export default function UpdateForm() {
 
   return (
     <AdminLayout>
-      {showConfirm && <ConfirmDialog title={form.title} onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
+      {showConfirm && <ConfirmDialog title="Delete this article?" message={`"${form.title}" will be permanently removed and disappear from the homepage carousel. This cannot be undone.`} onConfirm={handleDelete} onCancel={() => setShowConfirm(false)} />}
       {showPreview && (
         <PreviewDrawer onClose={() => setShowPreview(false)}>
           <UpdatePreview update={form} />

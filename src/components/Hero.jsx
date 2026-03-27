@@ -14,7 +14,7 @@ function StatBlock({ stat }) {
     );
 }
 
-export default function Hero({ isDark }) {
+export default function Hero({ isDark, readCount = 0, totalSkills = 0 }) {
     const { data: stats } = useStats();
 
     return (
@@ -40,6 +40,7 @@ export default function Hero({ isDark }) {
                             {stats?.map((stat) => (
                                 <StatBlock key={stat.label} stat={stat} />
                             ))}
+
                         </div>
                     </div>
                 </div>

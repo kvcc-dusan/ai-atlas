@@ -79,6 +79,7 @@ function mapTool(row) {
     bestFor: row.best_for ?? [],
     usedInSkills: row.used_in_skills ?? [],
     tier: row.tier,
+    logoUrl: row.logo_url ?? '',
   };
 }
 
@@ -105,7 +106,7 @@ export function useSkills() {
 }
 
 export function useTools() {
-  const { data, loading, error } = useQuery('tools_data', { order: 'name' });
+  const { data, loading, error } = useQuery('tools_data', { order: 'sort_order' });
   return { data: data ? data.map(mapTool) : null, loading, error };
 }
 

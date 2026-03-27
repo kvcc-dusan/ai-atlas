@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function SkillCard({ skill, onClick, onToolClick }) {
+export default function SkillCard({ skill, onClick, onToolClick, isRead }) {
     const handleToolClick = (e, tool) => {
         e.stopPropagation();
         onToolClick(tool);
@@ -8,7 +8,7 @@ export default function SkillCard({ skill, onClick, onToolClick }) {
 
     return (
         <div
-            className={`skill-card ${skill.hasDetail ? '' : 'no-detail'} ${skill.status === 'coming-soon' ? 'coming-soon' : ''}`}
+            className={`skill-card ${skill.hasDetail ? '' : 'no-detail'} ${skill.status === 'coming-soon' ? 'coming-soon' : ''} ${isRead ? 'read' : ''}`}
             onClick={skill.hasDetail ? onClick : undefined}
         >
             <div className="card-top">
@@ -16,6 +16,11 @@ export default function SkillCard({ skill, onClick, onToolClick }) {
                     <span className="card-chapter">{skill.chapter}</span>
                     <span className="card-category">{skill.category}</span>
                 </div>
+                {isRead && (
+                    <div className="card-top-right">
+                        <span className="card-read-badge">Read</span>
+                    </div>
+                )}
             </div>
 
             <h3 className="card-title">{skill.title}</h3>

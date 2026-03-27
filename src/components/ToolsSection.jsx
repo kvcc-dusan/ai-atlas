@@ -15,7 +15,7 @@ export function ToolTag({ tool, onClick }) {
     );
 }
 
-export default function ToolsSection({ highlightTool }) {
+export default function ToolsSection({ highlightTool, onToolClick }) {
     const { data: toolsData, loading } = useTools();
 
     return (
@@ -26,29 +26,35 @@ export default function ToolsSection({ highlightTool }) {
                     <span className="section-count">{loading ? '…' : `${toolsData?.length ?? 0} evaluated`}</span>
                 </div>
 
-                <div className="tools-compact-table">
+                <div className="tools-list">
                     {loading ? (
                         <p style={{ color: 'var(--text-muted)', padding: '1rem 0' }}>Loading tools…</p>
-                    ) : toolsData?.map((tool) => {
+                    ) : toolsData?.map((tool, i) => {
                         const isHighlighted = highlightTool && tool.name.toLowerCase().includes(highlightTool.toLowerCase());
 
                         return (
                             <div
                                 key={tool.id}
-                                className={`tools-row ${isHighlighted ? 'highlighted' : ''}`}
+                                className={`tools-item ${isHighlighted ? 'highlighted' : ''}`}
                                 id={`tool-${tool.id}`}
+                                onClick={() => onToolClick?.(tool.name)}
+                                style={{ animationDelay: `${i * 35}ms` }}
                             >
-                                <div className="tools-col-name">
-                                    <span className="status-dot active"></span>
-                                    <div className="tools-col-name-text">
-                                        <span className="tools-row-name">{tool.name}</span>
-                                        <span className="tools-row-provider">{tool.provider}</span>
+                                <div className="tools-item-left">
+                                    <span className="tools-item-index">{String(i + 1).padStart(2, '0')}</span>
+                                    <div className="tools-item-logo">
+                                        {tool.logoUrl
+                                            ? <img src={tool.logoUrl} alt={tool.name} />
+                                            : <span className="tools-item-logo-fallback">{tool.name.charAt(0)}</span>
+                                        }
                                     </div>
+                                    <div className="tools-item-identity">
+                                        <span className="tools-item-name">{tool.name}</span>
+                                        <span className="tools-item-provider">{tool.provider}</span>
+                                    </div>
+                                    <span className="tools-item-category">{tool.category}</span>
                                 </div>
-                                <span className="tools-col-category">
-                                    <span className="card-category">{tool.category}</span>
-                                </span>
-                                <span className="tools-col-desc">{tool.description}</span>
+                                <p className="tools-item-desc">{tool.description}</p>
                             </div>
                         );
                     })}

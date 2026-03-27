@@ -1,23 +1,25 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import SkillCard from './SkillCard';
 
+const INITIAL_LIMIT = 12;
+
 function ChevronDown() {
     return (
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+            <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 }
 
 function ChevronUp() {
     return (
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15" />
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+            <path d="M1 5L5 1L9 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 }
 
-export default function CardGrid({ skills, onCardClick, onToolClick }) {
+export default function CardGrid({ skills, onCardClick, onToolClick, readIds = new Set(), showAll = false, onShowAll }) {
     const [activeFilter, setActiveFilter] = useState('ALL');
     const [filterOpen, setFilterOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -31,6 +33,9 @@ export default function CardGrid({ skills, onCardClick, onToolClick }) {
         if (activeFilter === 'ALL') return skills;
         return skills.filter((s) => s.category === activeFilter);
     }, [skills, activeFilter]);
+
+    const visible = showAll ? filtered : filtered.slice(0, INITIAL_LIMIT);
+    const hasMore = filtered.length > INITIAL_LIMIT && !showAll;
 
     const handleFilterSelect = (cat) => {
         setActiveFilter(cat);
@@ -53,7 +58,7 @@ export default function CardGrid({ skills, onCardClick, onToolClick }) {
         <section className="section" id="skills-section">
             <div className="container">
                 <div className="section-header">
-                    <h2 className="section-title">Skills & Domains</h2>
+                    <h2 className="section-title">Skills &amp; Domains</h2>
                     <div className="section-header-right">
                         <div className="filter-dropdown-wrap" ref={dropdownRef}>
                             <button
@@ -91,16 +96,31 @@ export default function CardGrid({ skills, onCardClick, onToolClick }) {
                         </button>
                     </div>
                 ) : (
-                    <div className="card-grid">
-                        {filtered.map((skill) => (
-                            <SkillCard
-                                key={skill.id}
-                                skill={skill}
-                                onClick={() => onCardClick(skill.id)}
-                                onToolClick={onToolClick}
-                            />
-                        ))}
-                    </div>
+                    <>
+                        <div className="card-grid">
+                            {visible.map((skill) => (
+                                <SkillCard
+                                    key={skill.id}
+                                    skill={skill}
+                                    onClick={() => onCardClick(skill.id)}
+                                    onToolClick={onToolClick}
+                                    isRead={readIds.has(skill.id)}
+                                />
+                            ))}
+                        </div>
+
+                        {hasMore && (
+                            <div className="card-grid-load-more">
+                                <button
+                                    className="load-more-btn"
+                                    onClick={onShowAll}
+                                >
+                                    Load {filtered.length - INITIAL_LIMIT} more skills
+                                    <ChevronDown />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </section>

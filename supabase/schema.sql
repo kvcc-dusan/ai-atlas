@@ -34,7 +34,9 @@ create table if not exists tools_data (
   description    text,
   best_for       text[]      default '{}',
   used_in_skills int[]       default '{}',
-  tier           text        not null default 'SECONDARY'
+  tier           text        not null default 'SECONDARY',
+  logo_url       text,
+  sort_order     integer     not null default 0
 );
 
 -- Updates / Articles

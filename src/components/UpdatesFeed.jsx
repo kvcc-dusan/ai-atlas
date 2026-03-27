@@ -7,8 +7,8 @@ export default function ArticlesCarousel({ onUpdateClick }) {
 
     if (loading || !updates?.length) {
         return (
-            <section className="articles-section" id="updates-section">
-                <div className="articles-inner">
+            <section className="articles-section" id="updates-section" >
+                <div className="articles-inner" style={{ position: 'relative', zIndex: 1 }}>
                     <div className="articles-content">
                         <span className="articles-tag">Loading…</span>
                     </div>
@@ -30,19 +30,21 @@ export default function ArticlesCarousel({ onUpdateClick }) {
     };
 
     return (
-        <section className="articles-section" id="updates-section">
+        <section className="articles-section" id="updates-section" >
             <div className="articles-inner">
                 <div className="articles-content">
-                    <span className="articles-tag">{article.tag}</span>
-                    <div className="articles-text">
-                        <h2
-                            className="articles-heading"
-                            onClick={() => onUpdateClick(article.id)}
-                            style={{ cursor: 'pointer' }}
-                        >
-                            {article.title}
-                        </h2>
+                    <div className="articles-body">
+                        <span className="articles-tag">{article.tag}</span>
+                        <div className="articles-text">
+                            <h2
+                                className="articles-heading"
+                                onClick={() => onUpdateClick(article.id)}
+                                style={{ cursor: 'pointer' }}
+                            >
+                                {article.title}
+                            </h2>
                             <p className="articles-summary">{article.summary}</p>
+                        </div>
                     </div>
                     <div className="articles-nav">
                         <button className="articles-arrow" onClick={goPrev} aria-label="Previous article">
