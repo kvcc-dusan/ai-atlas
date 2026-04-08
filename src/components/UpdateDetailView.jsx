@@ -1,6 +1,10 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useUpdateById, useSkills } from '../hooks/useData';
+
+const formatDate = (str) => str
+  ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null;
 import GlowImage from './GlowImage';
 
 export default function UpdateDetailView({ onBack, onSkillClick }) {
@@ -52,7 +56,7 @@ export default function UpdateDetailView({ onBack, onSkillClick }) {
                 </button>
 
                 <div className="detail-meta">
-                    <span className="detail-meta-date">{update.date}</span>
+                    <span className="detail-meta-date">{formatDate(update.date)}</span>
                     <span className="update-tag">{update.tag}</span>
                 </div>
 
@@ -92,15 +96,16 @@ export default function UpdateDetailView({ onBack, onSkillClick }) {
                 {affectedSkills.length > 0 && (
                     <section className="detail-section">
                         <h2 className="detail-section-title">Affected Skills</h2>
-                        <div className="related-grid">
+                        <div className="related-list">
                             {affectedSkills.map((s) => (
-                                <div
-                                    key={s.id}
-                                    className="related-card"
-                                    onClick={() => onSkillClick(s.id)}
-                                >
-                                    <span className="related-chapter">{s.chapter}</span>
-                                    <span className="related-title">{s.title}</span>
+                                <div key={s.id} className="related-item" onClick={() => onSkillClick(s.id)}>
+                                    <div className="related-item-left">
+                                        <span className="related-item-title">{s.title}</span>
+                                        <span className="card-category">{s.category}</span>
+                                    </div>
+                                    <svg className="related-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                                    </svg>
                                 </div>
                             ))}
                         </div>

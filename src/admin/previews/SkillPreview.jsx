@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import Header from '../../components/Header';
 import { useTheme } from '../../hooks/useTheme';
+
+const formatDate = (str) => str
+  ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null;
 import CopyIcon from '../../assets/icons/copy.svg';
 
 export default function SkillPreview({ skill }) {
@@ -61,7 +65,7 @@ export default function SkillPreview({ skill }) {
             {skill.last_updated && (
               <>
                 <span className="detail-meta-sep">/</span>
-                <span className="detail-meta-date">{skill.last_updated}</span>
+                <span className="detail-meta-date">{formatDate(skill.last_updated)}</span>
               </>
             )}
           </div>

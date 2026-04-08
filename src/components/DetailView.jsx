@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSkillById, useSkills } from '../hooks/useData';
+import { useSkillById, useSkills, useTools } from '../hooks/useData';
+
+const formatDate = (str) => str
+  ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null;
 import CopyIcon from '../assets/icons/copy.svg';
 import GlowImage from './GlowImage';
 
@@ -8,6 +12,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
     const { id } = useParams();
     const { data: skill, loading } = useSkillById(parseInt(id, 10));
     const { data: allSkills } = useSkills();
+    const { data: allTools } = useTools();
 
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [activeSection, setActiveSection] = useState('overview');
@@ -128,7 +133,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
                     {skill.lastUpdated && (
                         <>
                             <span className="detail-meta-sep">/</span>
-                            <span className="detail-meta-date">{skill.lastUpdated}</span>
+                            <span className="detail-meta-date">{formatDate(skill.lastUpdated)}</span>
                         </>
                     )}
                 </div>
@@ -162,31 +167,43 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
 
                         <section className="detail-section" data-section="tools">
                             <h2 className="detail-section-title">Recommended Tools</h2>
-                            <table className="tools-table">
-                                <thead>
-                                    <tr>
-                                        <th>Tool</th>
-                                        <th>Best For</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {skill.detail.tools.map((tool) => (
-                                        <tr key={tool.name}>
-                                            <td>
-                                                <span
-                                                    className="detail-tool-link"
-                                                    onClick={() => onToolClick?.(tool.name)}
-                                                >
-                                                    {tool.name}
-                                                </span>
-                                            </td>
-                                            <td>{tool.best}</td>
-                                            <td>{tool.note}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <div className="detail-tools-list">
+                                {skill.detail.tools.map((tool) => {
+                                    const toolData = allTools?.find(t => t.name.toLowerCase() === tool.name.toLowerCase());
+                                    return (
+                                        <div
+                                            key={tool.name}
+                                            className="tools-item"
+                                            onClick={() => onToolClick?.(tool.name)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <div className="tools-item-left">
+                                                <div className="tools-item-logo">
+                                                    {toolData?.logoUrl
+                                                        ? <img src={toolData.logoUrl} alt={tool.name} />
+                                                        : <span className="tools-item-logo-fallback">{tool.name.charAt(0)}</span>
+                                                    }
+                                                </div>
+                                                <div className="tools-item-identity">
+                                                    <span className="tools-item-name">{tool.name}</span>
+                                                    {toolData?.provider && <span className="tools-item-provider">{toolData.provider}</span>}
+                                                </div>
+                                                {toolData?.category && <span className="tools-item-category">{toolData.category}</span>}
+                                            </div>
+                                            <div className="detail-tools-right">
+                                                <div className="detail-tools-field">
+                                                    <span className="detail-tools-label">Best for</span>
+                                                    <span className="detail-tools-value">{tool.best}</span>
+                                                </div>
+                                                <div className="detail-tools-field">
+                                                    <span className="detail-tools-label">Note</span>
+                                                    <span className="detail-tools-value">{tool.note}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </section>
 
                         <section className="detail-section" data-section="getting-started">
@@ -255,15 +272,16 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
                         {relatedSkills.length > 0 && (
                             <section className="detail-section" data-section="related">
                                 <h2 className="detail-section-title">Related Skills</h2>
-                                <div className="related-grid">
+                                <div className="related-list">
                                     {relatedSkills.map((s) => (
-                                        <div
-                                            key={s.id}
-                                            className="related-card"
-                                            onClick={() => onNavigate(s.id)}
-                                        >
-                                            <span className="related-chapter">{s.chapter}</span>
-                                            <span className="related-title">{s.title}</span>
+                                        <div key={s.id} className="related-item" onClick={() => onNavigate(s.id)}>
+                                            <div className="related-item-left">
+                                                <span className="related-item-title">{s.title}</span>
+                                                <span className="card-category">{s.category}</span>
+                                            </div>
+                                            <svg className="related-item-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                                            </svg>
                                         </div>
                                     ))}
                                 </div>

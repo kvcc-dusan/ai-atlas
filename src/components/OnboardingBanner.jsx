@@ -1,39 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { skills } from '../data';
+import { useSkills } from '../hooks/useData';
 
 const DISMISSED_KEY = 'ai-playbook-onboarding-dismissed';
 const ESSENTIAL_IDS = [4, 2, 10];
-
-const CARD_ICONS = {
-    4: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-        </svg>
-    ),
-    2: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-        </svg>
-    ),
-    10: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
-    ),
-};
 
 export default function OnboardingBanner() {
     const [dismissed, setDismissed] = useState(() => {
         return localStorage.getItem(DISMISSED_KEY) === 'true';
     });
+    const { data: allSkills } = useSkills();
     const navigate = useNavigate();
 
     if (dismissed) return null;
 
     const essentials = ESSENTIAL_IDS
-        .map((id) => skills.find((s) => s.id === id))
+        .map((id) => allSkills?.find((s) => s.id === id))
         .filter(Boolean);
+
+    if (!essentials.length) return null;
 
     const handleDismiss = () => {
         localStorage.setItem(DISMISSED_KEY, 'true');
@@ -72,9 +57,7 @@ export default function OnboardingBanner() {
                                 onClick={() => handleSkillClick(s.id)}
                                 style={{ animationDelay: `${i * 0.08}s` }}
                             >
-                                <div className="onboarding-card-icon">
-                                    {CARD_ICONS[s.id]}
-                                </div>
+                                <span className="onboarding-card-num">{String(i + 1).padStart(2, '0')}</span>
                                 <span className="onboarding-title">{s.title}</span>
                                 <span className="onboarding-card-desc">{s.brief}</span>
                                 <span className="onboarding-card-cta">

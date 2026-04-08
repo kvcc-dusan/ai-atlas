@@ -211,7 +211,7 @@ export default function App() {
       </Routes>
       </ErrorBoundary>
 
-      {!isAdmin && <Footer />}
+      {!isAdmin && !isHome && <Footer />}
 
       {!isAdmin && (
         <CommandPalette

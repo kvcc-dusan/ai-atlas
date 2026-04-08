@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
 import { useUpdates } from '../hooks/useData';
 
+const SESSION_KEY = 'articles-index';
+
 export default function ArticlesCarousel({ onUpdateClick }) {
     const { data: updates, loading } = useUpdates();
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(() => {
+        const saved = sessionStorage.getItem(SESSION_KEY);
+        return saved ? parseInt(saved, 10) : 0;
+    });
+
+    const setIndex = (val) => {
+        setCurrentIndex(val);
+        sessionStorage.setItem(SESSION_KEY, val);
+    };
 
     if (loading || !updates?.length) {
         return (
@@ -19,30 +29,44 @@ export default function ArticlesCarousel({ onUpdateClick }) {
     }
 
     const safeIndex = Math.min(currentIndex, updates.length - 1);
+    if (safeIndex !== currentIndex) setIndex(safeIndex);
     const article = updates[safeIndex];
 
-    const goNext = () => {
-        setCurrentIndex((prev) => (prev + 1) % updates.length);
+    const goNext = (e) => {
+        e.stopPropagation();
+        const next = (currentIndex + 1) % updates.length;
+        setIndex(next);
     };
 
-    const goPrev = () => {
-        setCurrentIndex((prev) => (prev - 1 + updates.length) % updates.length);
+    const goPrev = (e) => {
+        e.stopPropagation();
+        const prev = (currentIndex - 1 + updates.length) % updates.length;
+        setIndex(prev);
     };
+
+    const hasImage = !!article.image_url;
 
     return (
-        <section className="articles-section" id="updates-section" >
+        <section
+            className={`articles-section${hasImage ? ' articles-section--has-image' : ''}`}
+            id="updates-section"
+        >
+            {hasImage && (
+                <div className="articles-bg" key={article.id}>
+                    <img src={article.image_url} alt="" aria-hidden="true" />
+                    <div className="articles-bg-overlay" />
+                </div>
+            )}
             <div className="articles-inner">
-                <div className="articles-content">
+                <div
+                    className="articles-content"
+                    onClick={() => onUpdateClick(article.id)}
+                    style={{ cursor: 'pointer' }}
+                >
                     <div className="articles-body">
                         <span className="articles-tag">{article.tag}</span>
                         <div className="articles-text">
-                            <h2
-                                className="articles-heading"
-                                onClick={() => onUpdateClick(article.id)}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                {article.title}
-                            </h2>
+                            <h2 className="articles-heading">{article.title}</h2>
                             <p className="articles-summary">{article.summary}</p>
                         </div>
                     </div>

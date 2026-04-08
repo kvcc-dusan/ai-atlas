@@ -2,6 +2,10 @@ import React from 'react';
 import Header from '../../components/Header';
 import { useTheme } from '../../hooks/useTheme';
 
+const formatDate = (str) => str
+  ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  : null;
+
 export default function UpdatePreview({ update }) {
   const [isDark, toggleTheme] = useTheme();
 
@@ -25,7 +29,7 @@ export default function UpdatePreview({ update }) {
           </button>
 
           <div className="detail-meta">
-            <span className="detail-meta-date">{update.date}</span>
+            <span className="detail-meta-date">{formatDate(update.date)}</span>
             <span className="update-tag">{update.tag}</span>
           </div>
 

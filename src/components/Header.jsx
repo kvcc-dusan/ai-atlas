@@ -97,6 +97,9 @@ export default function Header({ onNavClick, isDark, onThemeToggle, onOpenPalett
                 </div>
             </div>
 
+            {/* Mobile menu backdrop */}
+            {menuOpen && <div className="mobile-menu-backdrop" onClick={() => setMenuOpen(false)} />}
+
             {/* Mobile menu overlay */}
             <div className={`mobile-menu ${menuOpen ? 'open' : ''}`}>
                 <nav className="mobile-menu-nav">

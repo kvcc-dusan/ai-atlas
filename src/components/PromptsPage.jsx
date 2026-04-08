@@ -94,9 +94,9 @@ export default function PromptsPage({ onBack }) {
                 {/* ── Header ── */}
                 <div className="prompts-header">
                     <div className="prompts-header-label">Prompt Library</div>
-                    <h1 className="prompts-heading">Ready-to-use prompts,<br />copy and adapt.</h1>
+                    <h1 className="prompts-heading">Stop starting from<br />scratch every single time.</h1>
                     <p className="prompts-subheading">
-                        Every skill in your Atlas ships with battle-tested prompts. Filter by category and paste straight into your AI of choice. Use the global search (⌘K) to find specific prompts.
+                        No blank canvas. Every Atlas skill comes with production-ready prompts — filtered by category, ready to paste into any AI tool.
                     </p>
                 </div>
 
