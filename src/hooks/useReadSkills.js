@@ -21,7 +21,7 @@ export function useReadSkills() {
             next.add(id);
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify([...next]));
-            } catch {}
+            } catch { /* localStorage unavailable (private mode / quota) — read state stays in memory */ }
             return next;
         });
     }, []);

@@ -6,29 +6,36 @@ export default function SingleSelectDropdown({ options = [], value = '', onChang
   const wrapRef = useRef(null);
   const searchRef = useRef(null);
 
+  // Closing always resets the search so the menu reopens unfiltered
+  const close = () => {
+    setIsOpen(false);
+    setSearch('');
+  };
+
   useEffect(() => {
     const handler = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setIsOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) close();
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+     
   }, []);
 
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e) => { if (e.key === 'Escape') { e.stopPropagation(); setIsOpen(false); } };
+    const handler = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
+     
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) setTimeout(() => searchRef.current?.focus(), 30);
-    else setSearch('');
   }, [isOpen]);
 
   const select = (val) => {
     onChange(val);
-    setIsOpen(false);
+    close();
   };
 
   const filtered = search
@@ -42,7 +49,7 @@ export default function SingleSelectDropdown({ options = [], value = '', onChang
       <button
         type="button"
         className={`ms-trigger${isOpen ? ' open' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => (isOpen ? close() : setIsOpen(true))}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >

@@ -1,7 +1,7 @@
 import React from 'react';
 import { workflowsData } from '../data';
 
-export default function WorkflowsSection({ onSkillClick }) {
+export default function WorkflowsSection() {
     return (
         <section className="section" id="workflows-section">
             <div className="container">

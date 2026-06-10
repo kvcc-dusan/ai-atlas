@@ -1,7 +1,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdateClick, onToolClick, liveSkills, liveTools, liveUpdates }) {
+// Thin wrapper: the modal mounts fresh on every open, so query state
+// and input focus reset naturally without isOpen-sync effects.
+export default function CommandPalette({ isOpen, ...props }) {
+    if (!isOpen) return null;
+    return <PaletteModal {...props} />;
+}
+
+function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, liveSkills, liveTools, liveUpdates }) {
     const [query, setQuery] = useState('');
     const inputRef = useRef(null);
     const modalRef = useRef(null);
@@ -15,11 +22,9 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
     };
 
     useEffect(() => {
-        if (isOpen) {
-            setQuery('');
-            setTimeout(() => inputRef.current?.focus(), 30);
-        }
-    }, [isOpen]);
+        const timer = setTimeout(() => inputRef.current?.focus(), 30);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -29,7 +34,6 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
 
     // Focus trap
     useEffect(() => {
-        if (!isOpen) return;
         const trap = (e) => {
             if (e.key !== 'Tab' || !modalRef.current) return;
             const focusable = modalRef.current.querySelectorAll('button, input, [tabindex="0"]');
@@ -44,7 +48,7 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
         };
         document.addEventListener('keydown', trap);
         return () => document.removeEventListener('keydown', trap);
-    }, [isOpen]);
+    }, []);
 
     // Build flat prompts list from live Supabase skills
     const allPrompts = useMemo(() => {
@@ -66,8 +70,6 @@ export default function CommandPalette({ isOpen, onClose, onSkillClick, onUpdate
         });
         return result;
     }, [liveSkills]);
-
-    if (!isOpen) return null;
 
     const q = query.toLowerCase().trim();
 

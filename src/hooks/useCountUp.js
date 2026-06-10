@@ -2,14 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 
 export function useCountUp(end, duration = 1200, startOnMount = false) {
     const [count, setCount] = useState(0);
-    const [hasStarted, setHasStarted] = useState(false);
+    const [hasStarted, setHasStarted] = useState(startOnMount);
     const ref = useRef(null);
 
     useEffect(() => {
-        if (startOnMount) {
-            setHasStarted(true);
-            return;
-        }
+        if (startOnMount) return;
 
         const observer = new IntersectionObserver(
             ([entry]) => {

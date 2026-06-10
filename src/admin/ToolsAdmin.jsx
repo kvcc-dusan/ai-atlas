@@ -97,12 +97,15 @@ export default function ToolsAdmin() {
     setSaving(true);
     setSaveError(null);
     try {
-      await Promise.all(
+      const results = await Promise.all(
         withOrder.map(t =>
           supabase.from('tools_data').update({ sort_order: t.sort_order }).eq('id', t.id)
         )
       );
-    } catch (err) {
+      // supabase returns errors in the result rather than throwing
+      const failed = results.find(r => r.error);
+      if (failed) throw failed.error;
+    } catch {
       setSaveError('Failed to save order. Try again.');
       setTools(current); // rollback
     } finally {

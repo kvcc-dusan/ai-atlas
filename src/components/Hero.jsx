@@ -14,7 +14,7 @@ function StatBlock({ stat }) {
     );
 }
 
-export default function Hero({ isDark, readCount = 0, totalSkills = 0 }) {
+export default function Hero({ isDark }) {
     const { data: stats } = useStats();
 
     return (

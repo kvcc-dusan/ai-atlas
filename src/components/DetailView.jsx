@@ -19,7 +19,7 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
 
     useEffect(() => {
         if (skill?.id) markRead?.(skill.id);
-    }, [skill?.id]);
+    }, [skill?.id, markRead]);
 
     useEffect(() => {
         if (!skill) return;

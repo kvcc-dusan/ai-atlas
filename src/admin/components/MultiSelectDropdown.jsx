@@ -6,31 +6,34 @@ export default function MultiSelectDropdown({ options = [], selected = [], onCha
   const wrapRef = useRef(null);
   const searchRef = useRef(null);
 
+  // Closing always resets the search so the menu reopens unfiltered
+  const close = () => {
+    setIsOpen(false);
+    setSearch('');
+  };
+
   // Close on click outside
   useEffect(() => {
     const handler = (e) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target)) setIsOpen(false);
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) close();
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+     
   }, []);
 
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
-    const handler = (e) => { if (e.key === 'Escape') { e.stopPropagation(); setIsOpen(false); } };
+    const handler = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
+     
   }, [isOpen]);
 
   // Focus search when opened
   useEffect(() => {
     if (isOpen) setTimeout(() => searchRef.current?.focus(), 30);
-  }, [isOpen]);
-
-  // Clear search when closed
-  useEffect(() => {
-    if (!isOpen) setSearch('');
   }, [isOpen]);
 
   const toggle = (value) => {
@@ -49,7 +52,7 @@ export default function MultiSelectDropdown({ options = [], selected = [], onCha
       <button
         type="button"
         className={`ms-trigger${isOpen ? ' open' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => (isOpen ? close() : setIsOpen(true))}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >

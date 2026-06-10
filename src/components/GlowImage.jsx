@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 
 function useAverageColor(url) {
-    const [color, setColor] = useState(null);
+    // Color is keyed by the url it was sampled from, so a url change
+    // naturally yields null until the new image loads — no reset effect needed.
+    const [sampled, setSampled] = useState({ url: null, color: null });
+    const color = sampled.url === url ? sampled.color : null;
     useEffect(() => {
         if (!url) return;
-        setColor(null);
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
@@ -21,7 +23,7 @@ function useAverageColor(url) {
                         r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
                     }
                 }
-                if (count > 0) setColor({ r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) });
+                if (count > 0) setSampled({ url, color: { r: Math.round(r / count), g: Math.round(g / count), b: Math.round(b / count) } });
             } catch { /* CORS blocked — no glow */ }
         };
         img.src = url;

@@ -32,7 +32,7 @@ const ProtectedRoute = lazy(() => import('./admin/ProtectedRoute'));
 function HomePage({ skills, onCardClick, onToolClick, onUpdateClick, highlightTool, isDark, readIds, showAllSkills, onShowAllSkills }) {
   return (
     <>
-      <Hero isDark={isDark} readCount={readIds.size} totalSkills={skills?.length ?? 0} />
+      <Hero isDark={isDark} />
       <OnboardingBanner />
       <CardGrid
         skills={skills ?? []}
@@ -59,15 +59,15 @@ export default function App() {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [drawerTool, setDrawerTool] = useState(null);
   const [isDark, toggleTheme] = useTheme();
-  const analytics = useAnalytics();
+  const { trackPageView } = useAnalytics();
   const { readIds, markRead } = useReadSkills();
 
   const isHome = location.pathname === '/';
   const isAdmin = location.pathname.startsWith('/admin');
 
   useEffect(() => {
-    analytics.trackPageView(location.pathname);
-  }, [location.pathname]);
+    trackPageView(location.pathname);
+  }, [location.pathname, trackPageView]);
 
   // Global Cmd+K / Ctrl+K shortcut
   useEffect(() => {
