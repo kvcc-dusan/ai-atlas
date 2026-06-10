@@ -1,26 +1,32 @@
 import { useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 
-const STORAGE_KEY = 'ai-playbook-analytics';
+// Fire-and-forget event logging to Supabase. Failures are silent by design —
+// analytics must never break or slow down the UI for visitors.
+function send(event, { entityId = null, label = null, path = null } = {}) {
+    supabase
+        .from('analytics_events')
+        .insert({
+            event,
+            entity_id: entityId,
+            label,
+            path: path ?? window.location.pathname,
+        })
+        .then(({ error }) => {
+            if (error) console.warn('analytics:', error.message);
+        });
+}
 
 export function useAnalytics() {
-    const track = useCallback((name, properties = {}) => {
-        const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-        const now = Date.now();
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-            .filter(e => now - new Date(e.timestamp).getTime() < THIRTY_DAYS);
-        stored.push({
-            event: name,
-            timestamp: new Date().toISOString(),
-            path: window.location.pathname,
-            ...properties,
-        });
-        if (stored.length > 500) stored.splice(0, stored.length - 500);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+    const trackEvent = useCallback((event, options) => {
+        send(event, options);
     }, []);
 
     const trackPageView = useCallback((path) => {
-        track('page_view', { page: path });
-    }, [track]);
+        // Admin browsing would pollute the usage data
+        if (path.startsWith('/admin')) return;
+        send('page_view', { path });
+    }, []);
 
-    return { trackPageView };
+    return { trackPageView, trackEvent };
 }

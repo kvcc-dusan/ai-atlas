@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSkillById, useSkills, useTools } from '../hooks/useData';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 const formatDate = (str) => str
   ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -16,10 +17,15 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
 
     const [copiedIndex, setCopiedIndex] = useState(null);
     const [activeSection, setActiveSection] = useState('overview');
+    const { trackEvent } = useAnalytics();
 
     useEffect(() => {
-        if (skill?.id) markRead?.(skill.id);
-    }, [skill?.id, markRead]);
+        if (skill?.id) {
+            markRead?.(skill.id);
+            trackEvent('skill_open', { entityId: String(skill.id), label: skill.title });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [skill?.id, markRead, trackEvent]);
 
     useEffect(() => {
         if (!skill) return;
@@ -101,6 +107,8 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
         }
         setCopiedIndex(index);
         setTimeout(() => setCopiedIndex(null), 2000);
+        const prompt = skill.detail.prompts[index];
+        trackEvent('prompt_copy', { entityId: `${skill.id}-${index}`, label: prompt?.title ?? 'Untitled prompt' });
     };
 
     const tocItems = [

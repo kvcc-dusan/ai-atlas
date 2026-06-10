@@ -28,6 +28,14 @@ function IconArticles() {
   );
 }
 
+function IconAnalytics() {
+  return (
+    <svg className="admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line>
+    </svg>
+  );
+}
+
 function IconPreview() {
   return (
     <svg className="admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -139,6 +147,10 @@ export default function AdminLayout({ children, title, actions, fullWidth }) {
           </NavLink>
 
           <div className="admin-nav-label" style={{ marginTop: '0.75rem' }}>Site</div>
+          <NavLink to="/admin/analytics" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+            <IconAnalytics />
+            Analytics
+          </NavLink>
           <NavLink to="/admin/preview" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconPreview />
             Preview

@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useData';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 export default function PromptsPage({ onBack }) {
     const { data: skills, loading } = useSkills();
     const [activeCategory, setActiveCategory] = useState('All');
     const [copiedKey, setCopiedKey] = useState(null);
     const [searchParams, setSearchParams] = useSearchParams();
+    const { trackEvent } = useAnalytics();
     const highlightKey = searchParams.get('highlight');
     const highlightRef = useRef(null);
 
@@ -65,19 +67,20 @@ export default function PromptsPage({ onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [highlightKey, loading, allPrompts.length]);
 
-    const handleCopy = async (text, key) => {
+    const handleCopy = async (prompt) => {
         try {
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(prompt.template);
         } catch {
             const ta = document.createElement('textarea');
-            ta.value = text;
+            ta.value = prompt.template;
             document.body.appendChild(ta);
             ta.select();
             document.execCommand('copy');
             document.body.removeChild(ta);
         }
-        setCopiedKey(key);
+        setCopiedKey(prompt.key);
         setTimeout(() => setCopiedKey(null), 2000);
+        trackEvent('prompt_copy', { entityId: prompt.key, label: prompt.title });
     };
 
     return (
@@ -162,7 +165,7 @@ export default function PromptsPage({ onBack }) {
                                         <pre className="pcard-template">{prompt.template}</pre>
                                         <button
                                             className={`pcard-copy-btn ${copiedKey === prompt.key ? 'copied' : ''}`}
-                                            onClick={() => handleCopy(prompt.template, prompt.key)}
+                                            onClick={() => handleCopy(prompt)}
                                             aria-label="Copy prompt"
                                         >
                                             {copiedKey === prompt.key ? (

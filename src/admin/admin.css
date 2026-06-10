@@ -2345,3 +2345,36 @@ tr.drag-over {
 .admin-save-hint--error {
   color: #ef4444;
 }
+
+/* ---- Analytics ---- */
+.admin-analytics-range {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.admin-analytics-block-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--admin-text-secondary);
+  margin-bottom: 0.625rem;
+}
+
+.admin-analytics-empty {
+  font-size: 0.8125rem;
+  color: var(--admin-text-tertiary);
+  padding: 0.5rem 0 1rem;
+}
+
+@media (max-width: 900px) {
+  .admin-analytics-grid {
+    grid-template-columns: 1fr;
+  }
+}

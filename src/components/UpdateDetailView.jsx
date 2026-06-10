@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUpdateById, useSkills } from '../hooks/useData';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 const formatDate = (str) => str
   ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -11,6 +12,12 @@ export default function UpdateDetailView({ onBack, onSkillClick }) {
     const { id } = useParams();
     const { data: update, loading } = useUpdateById(id);
     const { data: allSkills } = useSkills();
+    const { trackEvent } = useAnalytics();
+
+    useEffect(() => {
+        if (update?.id) trackEvent('article_open', { entityId: update.id, label: update.title });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [update?.id, trackEvent]);
 
     if (loading) {
         return (

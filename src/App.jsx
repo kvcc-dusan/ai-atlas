@@ -27,6 +27,7 @@ const ToolForm      = lazy(() => import('./admin/ToolForm'));
 const UpdatesAdmin  = lazy(() => import('./admin/UpdatesAdmin'));
 const UpdateForm    = lazy(() => import('./admin/UpdateForm'));
 const SitePreview   = lazy(() => import('./admin/SitePreview'));
+const AnalyticsAdmin = lazy(() => import('./admin/AnalyticsAdmin'));
 const ProtectedRoute = lazy(() => import('./admin/ProtectedRoute'));
 
 function HomePage({ skills, onCardClick, onToolClick, onUpdateClick, highlightTool, isDark, readIds, showAllSkills, onShowAllSkills }) {
@@ -59,7 +60,7 @@ export default function App() {
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [drawerTool, setDrawerTool] = useState(null);
   const [isDark, toggleTheme] = useTheme();
-  const { trackPageView } = useAnalytics();
+  const { trackPageView, trackEvent } = useAnalytics();
   const { readIds, markRead } = useReadSkills();
 
   const isHome = location.pathname === '/';
@@ -140,6 +141,7 @@ export default function App() {
     const tool = allTools?.find(t => t.name.toLowerCase() === toolName.toLowerCase());
     if (tool) {
       setDrawerTool(tool);
+      trackEvent('tool_open', { entityId: tool.id, label: tool.name });
     }
   };
 
@@ -206,6 +208,7 @@ export default function App() {
         <Route path="/admin/tools/:id" element={<Suspense fallback={null}><ProtectedRoute><ToolForm /></ProtectedRoute></Suspense>} />
         <Route path="/admin/updates" element={<Suspense fallback={null}><ProtectedRoute><UpdatesAdmin /></ProtectedRoute></Suspense>} />
         <Route path="/admin/updates/:id" element={<Suspense fallback={null}><ProtectedRoute><UpdateForm /></ProtectedRoute></Suspense>} />
+        <Route path="/admin/analytics" element={<Suspense fallback={null}><ProtectedRoute><AnalyticsAdmin /></ProtectedRoute></Suspense>} />
         <Route path="/admin/preview" element={<Suspense fallback={null}><ProtectedRoute><SitePreview /></ProtectedRoute></Suspense>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
