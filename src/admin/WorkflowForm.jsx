@@ -157,7 +157,6 @@ export default function WorkflowForm() {
               </div>
               <div className="admin-field">
                 <label className="admin-label">Roles</label>
-                <p className="admin-field-hint">Leave empty if the workflow is for everyone.</p>
                 <MultiSelectDropdown
                   options={ROLES.map(r => ({ value: r, label: r }))}
                   selected={form.roles ?? []}
