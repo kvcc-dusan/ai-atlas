@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
 import ConfirmDialog from './components/ConfirmDialog';
+import PublishToggle from './components/PublishToggle';
 import './admin.css';
 
 function LogoUpload({ logoUrl, onChange }) {
@@ -63,6 +64,7 @@ const EMPTY = {
   description: '',
   tier: 'SECONDARY',
   logo_url: '',
+  is_published: false,
 };
 
 
@@ -216,6 +218,10 @@ export default function ToolForm() {
         </div>
 
         {error && <div className="admin-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+
+        <div className="admin-publish-bar">
+          <PublishToggle value={form.is_published} onChange={(v) => set('is_published', v)} />
+        </div>
 
         <div className="admin-form-actions">
           <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>

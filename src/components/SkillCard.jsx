@@ -16,9 +16,11 @@ export default function SkillCard({ skill, onClick, onToolClick, isRead }) {
                     <span className="card-chapter">{skill.chapter}</span>
                     <span className="card-category">{skill.category}</span>
                 </div>
-                {isRead && (
+                {(isRead || skill.isPublished === false) && (
                     <div className="card-top-right">
-                        <span className="card-read-badge">Read</span>
+                        {/* Draft cards only ever surface in the admin preview — live queries filter them out */}
+                        {skill.isPublished === false && <span className="card-draft-badge">Draft</span>}
+                        {isRead && <span className="card-read-badge">Read</span>}
                     </div>
                 )}
             </div>

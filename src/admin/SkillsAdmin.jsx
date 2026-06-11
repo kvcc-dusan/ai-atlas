@@ -13,7 +13,7 @@ export default function SkillsAdmin() {
   useEffect(() => {
     supabase
       .from('skills')
-      .select('id, chapter, category, title, status, last_updated')
+      .select('id, chapter, category, title, status, last_updated, is_published')
       .order('id')
       .then(({ data, error }) => {
         if (error) console.error('Failed to load skills:', error.message);
@@ -107,6 +107,7 @@ export default function SkillsAdmin() {
               <th>Title</th>
               <th>Category</th>
               <th>Status</th>
+              <th>Visibility</th>
               <th>Updated</th>
               <th style={{ width: '32px' }}></th>
             </tr>
@@ -127,6 +128,12 @@ export default function SkillsAdmin() {
                   <span className={`admin-badge ${s.status === 'active' ? 'green' : 'amber'}`}>
                     <span className="admin-badge-dot" />
                     {s.status === 'active' ? 'Active' : 'Coming soon'}
+                  </span>
+                </td>
+                <td>
+                  <span className={`admin-badge ${s.is_published ? 'green' : ''}`}>
+                    <span className="admin-badge-dot" />
+                    {s.is_published ? 'Published' : 'Draft'}
                   </span>
                 </td>
                 <td className="admin-table-meta">{s.last_updated}</td>

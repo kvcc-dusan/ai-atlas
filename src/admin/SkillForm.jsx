@@ -9,6 +9,7 @@ import ImageRowsEditor from './components/ImageRowsEditor';
 import PreviewDrawer from './previews/PreviewDrawer';
 import SkillPreview from './previews/SkillPreview';
 import ConfirmDialog from './components/ConfirmDialog';
+import PublishToggle from './components/PublishToggle';
 import './admin.css';
 
 const CATEGORIES = ['CREATIVE', 'DEVELOPMENT', 'CONTENT', 'CORE SKILL', 'WORKFLOW', 'QA', 'PM', 'PRODUCTIVITY', 'REFERENCE', 'ADVANCED', 'POLICY'];
@@ -20,6 +21,7 @@ const EMPTY = {
   brief: '',
   tools: [],
   status: 'active',
+  is_published: false,
   last_updated: new Date().toISOString().slice(0, 10),
   image_rows: [],
   overview: [],
@@ -351,6 +353,10 @@ export default function SkillForm() {
         </div>
 
         {error && <div className="admin-error" style={{ marginBottom: '1rem' }}>{error}</div>}
+
+        <div className="admin-publish-bar">
+          <PublishToggle value={form.is_published} onChange={(v) => set('is_published', v)} />
+        </div>
 
         <div className="admin-form-actions">
           <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>

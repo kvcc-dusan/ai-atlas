@@ -8,6 +8,7 @@ import ImageUpload from './components/ImageUpload';
 import PreviewDrawer from './previews/PreviewDrawer';
 import UpdatePreview from './previews/UpdatePreview';
 import ConfirmDialog from './components/ConfirmDialog';
+import PublishToggle from './components/PublishToggle';
 import './admin.css';
 
 const TAGS = ['Model update', 'New tool', 'Policy change', 'New skill'];
@@ -19,6 +20,7 @@ function makeEmpty() {
     title: '',
     summary: '',
     tag: 'Model update',
+    is_published: false,
     image_url: '',
     image_aspect_ratio: '16/9',
     content: [],
@@ -33,7 +35,7 @@ export default function UpdateForm() {
   const isNew = id === 'new';
   const navigate = useNavigate();
 
-  const [form, setForm] = useState(() => isNew ? makeEmpty() : { id: '', date: '', title: '', summary: '', tag: 'Model update', image_url: '', image_aspect_ratio: '16/9', content: [], action_items: [], affected_skills: [] });
+  const [form, setForm] = useState(() => isNew ? makeEmpty() : { id: '', date: '', title: '', summary: '', tag: 'Model update', is_published: false, image_url: '', image_aspect_ratio: '16/9', content: [], action_items: [], affected_skills: [] });
   const [contentText, setContentText] = useState('');
   const [allSkills, setAllSkills] = useState([]);
   const [loading, setLoading] = useState(!isNew);
@@ -236,9 +238,13 @@ export default function UpdateForm() {
 
         {error && <div className="admin-error" style={{ marginBottom: '1rem' }}>{error}</div>}
 
+        <div className="admin-publish-bar">
+          <PublishToggle value={form.is_published} onChange={(v) => set('is_published', v)} />
+        </div>
+
         <div className="admin-form-actions">
           <button type="submit" className="admin-btn admin-btn-primary" disabled={saving}>
-            {saving ? 'Saving…' : isNew ? 'Publish article' : 'Save changes'}
+            {saving ? 'Saving…' : isNew ? 'Create article' : 'Save changes'}
           </button>
           <button type="button" className="admin-btn admin-btn-secondary" onClick={() => navigate('/admin/updates')}>
             Cancel

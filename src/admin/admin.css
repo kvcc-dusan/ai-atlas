@@ -2378,3 +2378,69 @@ tr.drag-over {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---- Publish toggle ---- */
+.admin-publish-bar {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  background: var(--admin-bg-card);
+}
+
+.admin-publish-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-publish-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-publish-track {
+  width: 34px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--admin-border);
+  position: relative;
+  transition: background 0.18s ease;
+  flex-shrink: 0;
+}
+
+.admin-publish-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.18s ease;
+}
+
+.admin-publish-toggle input:checked + .admin-publish-track {
+  background: #16a34a;
+}
+
+.admin-publish-toggle input:checked + .admin-publish-track .admin-publish-thumb {
+  transform: translateX(14px);
+}
+
+.admin-publish-toggle input:focus-visible + .admin-publish-track {
+  outline: 2px solid var(--admin-accent, #2563eb);
+  outline-offset: 2px;
+}
+
+.admin-publish-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--admin-text-secondary);
+}

@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { isPreviewMode } from '../lib/previewMode';
+
+// Drafts are hidden from the public site but visible in the admin Site Preview
+const showDrafts = isPreviewMode;
 
 function useQuery(table, options = {}) {
   const [data, setData] = useState(null);
@@ -14,6 +18,7 @@ function useQuery(table, options = {}) {
       let query = supabase.from(table).select('*');
       if (options.order) query = query.order(options.order, { ascending: options.ascending ?? true });
       if (options.eq) query = query.eq(options.eq[0], options.eq[1]);
+      if (options.publishedOnly && !showDrafts) query = query.eq('is_published', true);
 
       const timeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timed out')), 10000)
@@ -54,6 +59,7 @@ function mapSkill(row) {
     status: row.status,
     lastUpdated: row.last_updated,
     hasDetail: true,
+    isPublished: row.is_published ?? true,
     image_url: row.image_url ?? '',
     image_aspect_ratio: row.image_aspect_ratio ?? '16/9',
     image_rows: row.image_rows ?? [],
@@ -80,6 +86,7 @@ function mapTool(row) {
     usedInSkills: row.used_in_skills ?? [],
     tier: row.tier,
     logoUrl: row.logo_url ?? '',
+    isPublished: row.is_published ?? true,
   };
 }
 
@@ -90,6 +97,7 @@ function mapUpdate(row) {
     title: row.title,
     summary: row.summary,
     tag: row.tag,
+    isPublished: row.is_published ?? true,
     image_url: row.image_url ?? '',
     image_aspect_ratio: row.image_aspect_ratio ?? '16/9',
     detail: {
@@ -101,17 +109,17 @@ function mapUpdate(row) {
 }
 
 export function useSkills() {
-  const { data, loading, error } = useQuery('skills', { order: 'id' });
+  const { data, loading, error } = useQuery('skills', { order: 'id', publishedOnly: true });
   return { data: data ? data.map(mapSkill) : null, loading, error };
 }
 
 export function useTools() {
-  const { data, loading, error } = useQuery('tools_data', { order: 'sort_order' });
+  const { data, loading, error } = useQuery('tools_data', { order: 'sort_order', publishedOnly: true });
   return { data: data ? data.map(mapTool) : null, loading, error };
 }
 
 export function useUpdates() {
-  const { data, loading, error } = useQuery('updates', { order: 'date', ascending: false });
+  const { data, loading, error } = useQuery('updates', { order: 'date', ascending: false, publishedOnly: true });
   return { data: data ? data.map(mapUpdate) : null, loading, error };
 }
 
@@ -126,11 +134,9 @@ export function useSkillById(id) {
 
     async function fetch() {
       setLoading(true);
-      const { data: row, error: err } = await supabase
-        .from('skills')
-        .select('*')
-        .eq('id', id)
-        .single();
+      let query = supabase.from('skills').select('*').eq('id', id);
+      if (!showDrafts) query = query.eq('is_published', true);
+      const { data: row, error: err } = await query.maybeSingle();
       if (!cancelled) {
         setData(row ? mapSkill(row) : null);
         setError(err);
@@ -156,11 +162,9 @@ export function useUpdateById(id) {
 
     async function fetch() {
       setLoading(true);
-      const { data: row, error: err } = await supabase
-        .from('updates')
-        .select('*')
-        .eq('id', id)
-        .single();
+      let query = supabase.from('updates').select('*').eq('id', id);
+      if (!showDrafts) query = query.eq('is_published', true);
+      const { data: row, error: err } = await query.maybeSingle();
       if (!cancelled) {
         setData(row ? mapUpdate(row) : null);
         setError(err);
@@ -183,10 +187,15 @@ export function useStats() {
     let cancelled = false;
 
     async function fetch() {
+      const countQuery = (table) => {
+        let q = supabase.from(table).select('id', { count: 'exact', head: true });
+        if (!showDrafts) q = q.eq('is_published', true);
+        return q;
+      };
       const [skills, tools, updates] = await Promise.all([
-        supabase.from('skills').select('id', { count: 'exact', head: true }),
-        supabase.from('tools_data').select('id', { count: 'exact', head: true }),
-        supabase.from('updates').select('id', { count: 'exact', head: true }),
+        countQuery('skills'),
+        countQuery('tools_data'),
+        countQuery('updates'),
       ]);
 
       if (!cancelled) {

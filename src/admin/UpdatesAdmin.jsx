@@ -20,7 +20,7 @@ export default function UpdatesAdmin() {
   useEffect(() => {
     supabase
       .from('updates')
-      .select('id, date, title, tag')
+      .select('id, date, title, tag, is_published')
       .order('date', { ascending: false })
       .then(({ data, error }) => {
         if (error) console.error('Failed to load articles:', error.message);
@@ -118,6 +118,7 @@ export default function UpdatesAdmin() {
               <th style={{ width: '100px' }}>Date</th>
               <th>Title</th>
               <th>Tag</th>
+              <th>Visibility</th>
               <th style={{ width: '32px' }}></th>
             </tr>
           </thead>
@@ -130,6 +131,12 @@ export default function UpdatesAdmin() {
                   <span className={`admin-badge ${TAG_CLASS[u.tag] ?? ''}`}>
                     <span className="admin-badge-dot" />
                     {u.tag}
+                  </span>
+                </td>
+                <td>
+                  <span className={`admin-badge ${u.is_published ? 'green' : ''}`}>
+                    <span className="admin-badge-dot" />
+                    {u.is_published ? 'Published' : 'Draft'}
                   </span>
                 </td>
                 <td>

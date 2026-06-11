@@ -578,6 +578,22 @@ a {
 }
 
 /* "Read" badge — minimal pill, top right of card */
+/* "Draft" badge — amber pill, only visible in admin site preview */
+.card-draft-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .card-read-badge {
   font-family: var(--font-mono);
   font-size: 10px;

@@ -21,7 +21,7 @@ export default function ToolsAdmin() {
   useEffect(() => {
     supabase
       .from('tools_data')
-      .select('id, name, provider, category, tier, status, sort_order')
+      .select('id, name, provider, category, tier, status, sort_order, is_published')
       .order('sort_order')
       .then(({ data, error }) => {
         if (error) console.error('Failed to load tools:', error.message);
@@ -198,6 +198,7 @@ export default function ToolsAdmin() {
               <th>Category</th>
               <th>Tier</th>
               <th>Status</th>
+              <th>Visibility</th>
               <th style={{ width: '32px' }}></th>
             </tr>
           </thead>
@@ -242,6 +243,12 @@ export default function ToolsAdmin() {
                   <span className={`admin-badge ${t.status === 'approved' ? 'green' : ''}`}>
                     <span className="admin-badge-dot" />
                     {t.status}
+                  </span>
+                </td>
+                <td>
+                  <span className={`admin-badge ${t.is_published ? 'green' : ''}`}>
+                    <span className="admin-badge-dot" />
+                    {t.is_published ? 'Published' : 'Draft'}
                   </span>
                 </td>
                 <td>

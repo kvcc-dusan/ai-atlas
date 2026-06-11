@@ -48,8 +48,8 @@ export default function SitePreview() {
   return (
     <AdminLayout fullWidth>
       <div className="site-preview-toolbar">
-        <span className="site-preview-toolbar-title">Live Site Preview</span>
-        <p className="site-preview-toolbar-sub">Showing current Supabase data — save edits first to see them here</p>
+        <span className="site-preview-toolbar-title">Site Preview</span>
+        <p className="site-preview-toolbar-sub">Includes drafts (marked on cards) — save edits first to see them here</p>
         <div className="site-preview-devices">
           {DEVICES.map(d => (
             <button
@@ -63,7 +63,7 @@ export default function SitePreview() {
           ))}
         </div>
         <a
-          href="/"
+          href="/?preview=1"
           target="_blank"
           rel="noopener noreferrer"
           className="admin-btn admin-btn-secondary admin-btn-sm"
@@ -74,7 +74,7 @@ export default function SitePreview() {
 
       <div className="site-preview-viewport">
         <iframe
-          src="/"
+          src="/?preview=1"
           className="site-preview-frame"
           style={iframeStyle}
           title="Live site preview"
