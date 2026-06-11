@@ -28,6 +28,14 @@ function IconArticles() {
   );
 }
 
+function IconWorkflows() {
+  return (
+    <svg className="admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="5" cy="6" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="19" cy="18" r="2"></circle><path d="M7 6h8a4 4 0 0 1 0 8h-1"></path><path d="M10 12h-1a4 4 0 0 0 0 8h8"></path>
+    </svg>
+  );
+}
+
 function IconAnalytics() {
   return (
     <svg className="admin-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -140,6 +148,10 @@ export default function AdminLayout({ children, title, actions, fullWidth }) {
           <NavLink to="/admin/tools" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconTools />
             Tools
+          </NavLink>
+          <NavLink to="/admin/workflows" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
+            <IconWorkflows />
+            Workflows
           </NavLink>
           <NavLink to="/admin/updates" onClick={() => setSidebarOpen(false)} className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <IconArticles />

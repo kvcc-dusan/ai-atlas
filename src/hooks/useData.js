@@ -92,6 +92,24 @@ function mapTool(row) {
   };
 }
 
+function mapWorkflow(row) {
+  return {
+    id: row.id,
+    number: row.number,
+    title: row.title,
+    description: row.description ?? '',
+    category: row.category ?? 'WORKFLOW',
+    difficulty: row.difficulty ?? 'Beginner',
+    roles: row.roles ?? [],
+    status: row.status,
+    isPublished: row.is_published ?? true,
+    lastUpdated: row.last_updated,
+    tools: row.tools ?? [],
+    steps: row.steps ?? [],
+    relatedSkills: row.related_skills ?? [],
+  };
+}
+
 function mapUpdate(row) {
   return {
     id: row.id,
@@ -118,6 +136,39 @@ export function useSkills() {
 export function useTools() {
   const { data, loading, error } = useQuery('tools_data', { order: 'sort_order', publishedOnly: true });
   return { data: data ? data.map(mapTool) : null, loading, error };
+}
+
+export function useWorkflows() {
+  const { data, loading, error } = useQuery('workflows', { order: 'id', publishedOnly: true });
+  return { data: data ? data.map(mapWorkflow) : null, loading, error };
+}
+
+export function useWorkflowById(id) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    async function fetch() {
+      setLoading(true);
+      let query = supabase.from('workflows').select('*').eq('id', id);
+      if (!showDrafts) query = query.eq('is_published', true);
+      const { data: row, error: err } = await query.maybeSingle();
+      if (!cancelled) {
+        setData(row ? mapWorkflow(row) : null);
+        setError(err);
+        setLoading(false);
+      }
+    }
+
+    fetch();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  return { data, loading, error };
 }
 
 export function useUpdates() {

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import SkillCard from './SkillCard';
+import WorkflowCard from './WorkflowCard';
 import { ROLES, DIFFICULTIES } from '../lib/taxonomy';
 
 const INITIAL_LIMIT = 12;
@@ -69,24 +70,30 @@ function FilterDropdown({ idleLabel, value, options, onSelect }) {
     );
 }
 
-export default function CardGrid({ skills, onCardClick, onToolClick, readIds = new Set(), showAll = false, onShowAll }) {
+export default function CardGrid({ skills, workflows = [], onCardClick, onWorkflowClick, onToolClick, readIds = new Set(), showAll = false, onShowAll }) {
     const [activeCategory, setActiveCategory] = useState('ALL');
     const [activeRole, setActiveRole] = useState('ALL');
     const [activeDifficulty, setActiveDifficulty] = useState('ALL');
 
+    // Skills and workflows share the grid; kind drives card type and click target
+    const items = useMemo(() => [
+        ...skills.map((s) => ({ ...s, kind: 'skill' })),
+        ...workflows.map((w) => ({ ...w, kind: 'workflow' })),
+    ], [skills, workflows]);
+
     const categories = useMemo(() => {
-        return Array.from(new Set(skills.map((s) => s.category)));
-    }, [skills]);
+        return Array.from(new Set(items.map((s) => s.category).filter(Boolean)));
+    }, [items]);
 
     const filtered = useMemo(() => {
-        return skills.filter((s) => {
+        return items.filter((s) => {
             if (activeCategory !== 'ALL' && s.category !== activeCategory) return false;
-            // No roles on a skill = it's for everyone, so it survives any role filter
+            // No roles on an item = it's for everyone, so it survives any role filter
             if (activeRole !== 'ALL' && s.roles?.length > 0 && !s.roles.includes(activeRole)) return false;
             if (activeDifficulty !== 'ALL' && s.difficulty !== activeDifficulty) return false;
             return true;
         });
-    }, [skills, activeCategory, activeRole, activeDifficulty]);
+    }, [items, activeCategory, activeRole, activeDifficulty]);
 
     const visible = showAll ? filtered : filtered.slice(0, INITIAL_LIMIT);
     const hasMore = filtered.length > INITIAL_LIMIT && !showAll;
@@ -102,7 +109,7 @@ export default function CardGrid({ skills, onCardClick, onToolClick, readIds = n
         <section className="section" id="skills-section">
             <div className="container">
                 <div className="section-header">
-                    <h2 className="section-title">Skills &amp; Domains</h2>
+                    <h2 className="section-title">Skills &amp; Workflows</h2>
                     <div className="section-header-right">
                         <FilterDropdown idleLabel="Category" value={activeCategory} options={categories} onSelect={setActiveCategory} />
                         <FilterDropdown idleLabel="Role" value={activeRole} options={ROLES} onSelect={setActiveRole} />
@@ -121,14 +128,23 @@ export default function CardGrid({ skills, onCardClick, onToolClick, readIds = n
                 ) : (
                     <>
                         <div className="card-grid">
-                            {visible.map((skill) => (
-                                <SkillCard
-                                    key={skill.id}
-                                    skill={skill}
-                                    onClick={() => onCardClick(skill.id)}
-                                    onToolClick={onToolClick}
-                                    isRead={readIds.has(skill.id)}
-                                />
+                            {visible.map((item) => (
+                                item.kind === 'workflow' ? (
+                                    <WorkflowCard
+                                        key={`workflow-${item.id}`}
+                                        workflow={item}
+                                        onClick={() => onWorkflowClick(item.id)}
+                                        onToolClick={onToolClick}
+                                    />
+                                ) : (
+                                    <SkillCard
+                                        key={`skill-${item.id}`}
+                                        skill={item}
+                                        onClick={() => onCardClick(item.id)}
+                                        onToolClick={onToolClick}
+                                        isRead={readIds.has(item.id)}
+                                    />
+                                )
                             ))}
                         </div>
 

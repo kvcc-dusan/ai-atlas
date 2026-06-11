@@ -96,6 +96,7 @@ export default function AnalyticsAdmin() {
   }, [filtered]);
 
   const topSkills = useMemo(() => topByLabel(filtered, 'skill_open'), [filtered]);
+  const topWorkflows = useMemo(() => topByLabel(filtered, 'workflow_open'), [filtered]);
   const topPrompts = useMemo(() => topByLabel(filtered, 'prompt_copy'), [filtered]);
   const topTools = useMemo(() => topByLabel(filtered, 'tool_open'), [filtered]);
   const topArticles = useMemo(() => topByLabel(filtered, 'article_open'), [filtered]);
@@ -167,6 +168,7 @@ export default function AnalyticsAdmin() {
 
           <div className="admin-analytics-grid">
             <RankTable title="Top skills" rows={topSkills} emptyText="No skill opens in this period." />
+            <RankTable title="Top workflows" rows={topWorkflows} emptyText="No workflow opens in this period." />
             <RankTable title="Top prompts" rows={topPrompts} emptyText="No prompt copies in this period." />
             <RankTable title="Top tools" rows={topTools} emptyText="No tool opens in this period." />
             <RankTable title="Top articles" rows={topArticles} emptyText="No article opens in this period." />

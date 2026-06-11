@@ -8,7 +8,7 @@ export default function CommandPalette({ isOpen, ...props }) {
     return <PaletteModal {...props} />;
 }
 
-function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, liveSkills, liveTools, liveUpdates }) {
+function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWorkflowClick, liveSkills, liveTools, liveUpdates, liveWorkflows }) {
     const [query, setQuery] = useState('');
     const inputRef = useRef(null);
     const modalRef = useRef(null);
@@ -82,6 +82,10 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, liveS
             s.category?.toLowerCase().includes(q)
         ).slice(0, 6);
 
+    const matchedWorkflows = (liveWorkflows ?? []).filter(w =>
+        !q || w.title?.toLowerCase().includes(q) || w.description?.toLowerCase().includes(q) || w.tools?.some(t => t.toLowerCase().includes(q))
+    ).slice(0, !q ? 0 : 4);
+
     const matchedTools = (liveTools ?? []).filter(t =>
         !q || t.name?.toLowerCase().includes(q) || t.provider?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q)
     ).slice(0, !q ? 0 : 4);
@@ -99,7 +103,7 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, liveS
             p.skillTitle?.toLowerCase().includes(q)
         ).slice(0, 4);
 
-    const hasResults = matchedSkills.length || matchedTools.length || matchedUpdates.length || matchedPrompts.length;
+    const hasResults = matchedSkills.length || matchedWorkflows.length || matchedTools.length || matchedUpdates.length || matchedPrompts.length;
 
     return (
         <div className="cmd-overlay" onClick={onClose} role="presentation">
@@ -140,6 +144,23 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, liveS
                                     <span className="cmd-item-num">{skill.chapter}</span>
                                     <span className="cmd-item-title">{skill.title}</span>
                                     <span className="cmd-item-tag">{skill.category}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {matchedWorkflows.length > 0 && (
+                        <div className="cmd-group">
+                            <span className="cmd-group-label">Workflows</span>
+                            {matchedWorkflows.map(wf => (
+                                <button
+                                    key={wf.id}
+                                    className="cmd-item"
+                                    onClick={() => { onWorkflowClick(wf.id); onClose(); }}
+                                >
+                                    <span className="cmd-item-num">{wf.number}</span>
+                                    <span className="cmd-item-title">{wf.title}</span>
+                                    <span className="cmd-item-tag">Workflow</span>
                                 </button>
                             ))}
                         </div>

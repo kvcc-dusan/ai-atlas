@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { useSkills, useTools, useUpdates } from './hooks/useData';
+import { useSkills, useTools, useUpdates, useWorkflows } from './hooks/useData';
 import { useTheme } from './hooks/useTheme';
 import { useAnalytics } from './hooks/useAnalytics';
 import { useReadSkills } from './hooks/useReadSkills';
@@ -10,6 +10,7 @@ import CardGrid from './components/CardGrid';
 import ToolsSection from './components/ToolsSection';
 import DetailView from './components/DetailView';
 import UpdateDetailView from './components/UpdateDetailView';
+import WorkflowDetailView from './components/WorkflowDetailView';
 import UpdatesFeed from './components/UpdatesFeed';
 import OnboardingBanner from './components/OnboardingBanner';
 import Footer from './components/Footer';
@@ -25,19 +26,23 @@ const SkillForm     = lazy(() => import('./admin/SkillForm'));
 const ToolsAdmin    = lazy(() => import('./admin/ToolsAdmin'));
 const ToolForm      = lazy(() => import('./admin/ToolForm'));
 const UpdatesAdmin  = lazy(() => import('./admin/UpdatesAdmin'));
+const WorkflowsAdmin = lazy(() => import('./admin/WorkflowsAdmin'));
+const WorkflowForm  = lazy(() => import('./admin/WorkflowForm'));
 const UpdateForm    = lazy(() => import('./admin/UpdateForm'));
 const SitePreview   = lazy(() => import('./admin/SitePreview'));
 const AnalyticsAdmin = lazy(() => import('./admin/AnalyticsAdmin'));
 const ProtectedRoute = lazy(() => import('./admin/ProtectedRoute'));
 
-function HomePage({ skills, onCardClick, onToolClick, onUpdateClick, highlightTool, isDark, readIds, showAllSkills, onShowAllSkills }) {
+function HomePage({ skills, workflows, onCardClick, onWorkflowClick, onToolClick, onUpdateClick, highlightTool, isDark, readIds, showAllSkills, onShowAllSkills }) {
   return (
     <>
       <Hero isDark={isDark} />
       <OnboardingBanner />
       <CardGrid
         skills={skills ?? []}
+        workflows={workflows ?? []}
         onCardClick={onCardClick}
+        onWorkflowClick={onWorkflowClick}
         onToolClick={onToolClick}
         readIds={readIds}
         showAll={showAllSkills}
@@ -55,6 +60,7 @@ export default function App() {
   const { data: skills } = useSkills();
   const { data: allTools } = useTools();
   const { data: allUpdates } = useUpdates();
+  const { data: allWorkflows } = useWorkflows();
   const [highlightTool, setHighlightTool] = useState(null);
   const [showAllSkills, setShowAllSkills] = useState(false);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
@@ -89,6 +95,11 @@ export default function App() {
 
   const handleUpdateClick = (id) => {
     navigate(`/updates/${id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleWorkflowClick = (id) => {
+    navigate(`/workflows/${id}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -164,6 +175,8 @@ export default function App() {
           element={
             <HomePage
               skills={skills}
+              workflows={allWorkflows}
+              onWorkflowClick={handleWorkflowClick}
               onCardClick={handleCardClick}
               onToolClick={handleToolClick}
               onUpdateClick={handleUpdateClick}
@@ -196,6 +209,16 @@ export default function App() {
           }
         />
         <Route
+          path="/workflows/:id"
+          element={
+            <WorkflowDetailView
+              onBack={handleBack}
+              onSkillClick={handleCardClick}
+              onToolClick={handleToolClick}
+            />
+          }
+        />
+        <Route
           path="/prompts"
           element={<PromptsPage onBack={() => navigate('/')} />}
         />
@@ -206,6 +229,8 @@ export default function App() {
         <Route path="/admin/skills/:id" element={<Suspense fallback={null}><ProtectedRoute><SkillForm /></ProtectedRoute></Suspense>} />
         <Route path="/admin/tools" element={<Suspense fallback={null}><ProtectedRoute><ToolsAdmin /></ProtectedRoute></Suspense>} />
         <Route path="/admin/tools/:id" element={<Suspense fallback={null}><ProtectedRoute><ToolForm /></ProtectedRoute></Suspense>} />
+        <Route path="/admin/workflows" element={<Suspense fallback={null}><ProtectedRoute><WorkflowsAdmin /></ProtectedRoute></Suspense>} />
+        <Route path="/admin/workflows/:id" element={<Suspense fallback={null}><ProtectedRoute><WorkflowForm /></ProtectedRoute></Suspense>} />
         <Route path="/admin/updates" element={<Suspense fallback={null}><ProtectedRoute><UpdatesAdmin /></ProtectedRoute></Suspense>} />
         <Route path="/admin/updates/:id" element={<Suspense fallback={null}><ProtectedRoute><UpdateForm /></ProtectedRoute></Suspense>} />
         <Route path="/admin/analytics" element={<Suspense fallback={null}><ProtectedRoute><AnalyticsAdmin /></ProtectedRoute></Suspense>} />
@@ -226,6 +251,8 @@ export default function App() {
           liveSkills={skills}
           liveTools={allTools}
           liveUpdates={allUpdates}
+          liveWorkflows={allWorkflows}
+          onWorkflowClick={handleWorkflowClick}
         />
       )}
 
