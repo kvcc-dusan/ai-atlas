@@ -60,6 +60,8 @@ function mapSkill(row) {
     lastUpdated: row.last_updated,
     hasDetail: true,
     isPublished: row.is_published ?? true,
+    difficulty: row.difficulty ?? 'Beginner',
+    roles: row.roles ?? [],
     image_url: row.image_url ?? '',
     image_aspect_ratio: row.image_aspect_ratio ?? '16/9',
     image_rows: row.image_rows ?? [],

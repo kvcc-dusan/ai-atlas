@@ -138,6 +138,16 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
                     <span className="detail-meta-label">{skill.chapter}</span>
                     <span className="detail-meta-sep">/</span>
                     <span className="detail-meta-label">{skill.category}</span>
+                    {skill.difficulty && (
+                        <>
+                            <span className="detail-meta-sep">/</span>
+                            <span className="detail-meta-label">{skill.difficulty}</span>
+                        </>
+                    )}
+                    <span className="detail-meta-sep">/</span>
+                    <span className="detail-meta-label">
+                        {skill.roles?.length ? skill.roles.join(' · ') : 'Everyone'}
+                    </span>
                     {skill.lastUpdated && (
                         <>
                             <span className="detail-meta-sep">/</span>

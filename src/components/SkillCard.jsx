@@ -15,6 +15,11 @@ export default function SkillCard({ skill, onClick, onToolClick, isRead }) {
                 <div className="card-top-left">
                     <span className="card-chapter">{skill.chapter}</span>
                     <span className="card-category">{skill.category}</span>
+                    {skill.difficulty && (
+                        <span className={`card-difficulty card-difficulty--${skill.difficulty.toLowerCase()}`}>
+                            {skill.difficulty}
+                        </span>
+                    )}
                 </div>
                 {(isRead || skill.isPublished === false) && (
                     <div className="card-top-right">

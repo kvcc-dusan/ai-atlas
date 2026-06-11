@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import SkillCard from './SkillCard';
+import { ROLES, DIFFICULTIES } from '../lib/taxonomy';
 
 const INITIAL_LIMIT = 12;
 
@@ -19,40 +20,83 @@ function ChevronUp() {
     );
 }
 
-export default function CardGrid({ skills, onCardClick, onToolClick, readIds = new Set(), showAll = false, onShowAll }) {
-    const [activeFilter, setActiveFilter] = useState('ALL');
-    const [filterOpen, setFilterOpen] = useState(false);
-    const dropdownRef = useRef(null);
+// Dropdown filter; 'ALL' means inactive and shows the idle label instead
+function FilterDropdown({ idleLabel, value, options, onSelect }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const wrapRef = useRef(null);
 
-    const activeCategories = useMemo(() => {
-        const cats = new Set(skills.map((s) => s.category));
-        return ['ALL', ...Array.from(cats)];
-    }, [skills]);
-
-    const filtered = useMemo(() => {
-        if (activeFilter === 'ALL') return skills;
-        return skills.filter((s) => s.category === activeFilter);
-    }, [skills, activeFilter]);
-
-    const visible = showAll ? filtered : filtered.slice(0, INITIAL_LIMIT);
-    const hasMore = filtered.length > INITIAL_LIMIT && !showAll;
-
-    const handleFilterSelect = (cat) => {
-        setActiveFilter(cat);
-        setFilterOpen(false);
-    };
-
-    // Click outside to close
     useEffect(() => {
-        if (!filterOpen) return;
+        if (!isOpen) return;
         const handler = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setFilterOpen(false);
+            if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+                setIsOpen(false);
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, [filterOpen]);
+    }, [isOpen]);
+
+    const handleSelect = (option) => {
+        onSelect(option);
+        setIsOpen(false);
+    };
+
+    return (
+        <div className="filter-dropdown-wrap" ref={wrapRef}>
+            <button
+                className={`filter-trigger ${value !== 'ALL' ? 'has-filter' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                {value === 'ALL' ? idleLabel : value}
+                <span className="filter-arrow">
+                    {isOpen ? <ChevronUp /> : <ChevronDown />}
+                </span>
+            </button>
+            {isOpen && (
+                <div className="filter-dropdown">
+                    {['ALL', ...options].map((option) => (
+                        <button
+                            key={option}
+                            className={`filter-dropdown-item ${value === option ? 'active' : ''}`}
+                            onClick={() => handleSelect(option)}
+                        >
+                            {option === 'ALL' ? `All ${idleLabel.toLowerCase()}s` : option}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+export default function CardGrid({ skills, onCardClick, onToolClick, readIds = new Set(), showAll = false, onShowAll }) {
+    const [activeCategory, setActiveCategory] = useState('ALL');
+    const [activeRole, setActiveRole] = useState('ALL');
+    const [activeDifficulty, setActiveDifficulty] = useState('ALL');
+
+    const categories = useMemo(() => {
+        return Array.from(new Set(skills.map((s) => s.category)));
+    }, [skills]);
+
+    const filtered = useMemo(() => {
+        return skills.filter((s) => {
+            if (activeCategory !== 'ALL' && s.category !== activeCategory) return false;
+            // No roles on a skill = it's for everyone, so it survives any role filter
+            if (activeRole !== 'ALL' && s.roles?.length > 0 && !s.roles.includes(activeRole)) return false;
+            if (activeDifficulty !== 'ALL' && s.difficulty !== activeDifficulty) return false;
+            return true;
+        });
+    }, [skills, activeCategory, activeRole, activeDifficulty]);
+
+    const visible = showAll ? filtered : filtered.slice(0, INITIAL_LIMIT);
+    const hasMore = filtered.length > INITIAL_LIMIT && !showAll;
+    const hasActiveFilter = activeCategory !== 'ALL' || activeRole !== 'ALL' || activeDifficulty !== 'ALL';
+
+    const clearFilters = () => {
+        setActiveCategory('ALL');
+        setActiveRole('ALL');
+        setActiveDifficulty('ALL');
+    };
 
     return (
         <section className="section" id="skills-section">
@@ -60,39 +104,18 @@ export default function CardGrid({ skills, onCardClick, onToolClick, readIds = n
                 <div className="section-header">
                     <h2 className="section-title">Skills &amp; Domains</h2>
                     <div className="section-header-right">
-                        <div className="filter-dropdown-wrap" ref={dropdownRef}>
-                            <button
-                                className={`filter-trigger ${activeFilter !== 'ALL' ? 'has-filter' : ''}`}
-                                onClick={() => setFilterOpen(!filterOpen)}
-                            >
-                                {activeFilter === 'ALL' ? 'Filter' : activeFilter}
-                                <span className="filter-arrow">
-                                    {filterOpen ? <ChevronUp /> : <ChevronDown />}
-                                </span>
-                            </button>
-                            {filterOpen && (
-                                <div className="filter-dropdown">
-                                    {activeCategories.map((cat) => (
-                                        <button
-                                            key={cat}
-                                            className={`filter-dropdown-item ${activeFilter === cat ? 'active' : ''}`}
-                                            onClick={() => handleFilterSelect(cat)}
-                                        >
-                                            {cat}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <span className="section-count">{filtered.length} {activeFilter === 'ALL' ? 'entries' : 'matching'}</span>
+                        <FilterDropdown idleLabel="Category" value={activeCategory} options={categories} onSelect={setActiveCategory} />
+                        <FilterDropdown idleLabel="Role" value={activeRole} options={ROLES} onSelect={setActiveRole} />
+                        <FilterDropdown idleLabel="Level" value={activeDifficulty} options={DIFFICULTIES} onSelect={setActiveDifficulty} />
+                        <span className="section-count">{filtered.length} {hasActiveFilter ? 'matching' : 'entries'}</span>
                     </div>
                 </div>
 
                 {filtered.length === 0 ? (
                     <div className="empty-state">
                         <p className="empty-state-text">No skills match your filters.</p>
-                        <button className="empty-state-clear" onClick={() => setActiveFilter('ALL')}>
-                            Clear filter
+                        <button className="empty-state-clear" onClick={clearFilters}>
+                            Clear filters
                         </button>
                     </div>
                 ) : (

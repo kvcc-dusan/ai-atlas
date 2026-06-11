@@ -10,6 +10,7 @@ import PreviewDrawer from './previews/PreviewDrawer';
 import SkillPreview from './previews/SkillPreview';
 import ConfirmDialog from './components/ConfirmDialog';
 import PublishToggle from './components/PublishToggle';
+import { ROLES, DIFFICULTIES } from '../lib/taxonomy';
 import './admin.css';
 
 const CATEGORIES = ['CREATIVE', 'DEVELOPMENT', 'CONTENT', 'CORE SKILL', 'WORKFLOW', 'QA', 'PM', 'PRODUCTIVITY', 'REFERENCE', 'ADVANCED', 'POLICY'];
@@ -22,6 +23,8 @@ const EMPTY = {
   tools: [],
   status: 'active',
   is_published: false,
+  difficulty: 'Beginner',
+  roles: [],
   last_updated: new Date().toISOString().slice(0, 10),
   image_rows: [],
   overview: [],
@@ -207,6 +210,25 @@ export default function SkillForm() {
               <div className="admin-field">
                 <label className="admin-label">Last updated</label>
                 <input type="date" className="admin-input" value={form.last_updated ?? ''} onChange={(e) => set('last_updated', e.target.value)} />
+              </div>
+            </div>
+
+            <div className="admin-row cols-2">
+              <div className="admin-field">
+                <label className="admin-label">Difficulty</label>
+                <select className="admin-select" value={form.difficulty ?? 'Beginner'} onChange={(e) => set('difficulty', e.target.value)}>
+                  {DIFFICULTIES.map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="admin-field">
+                <label className="admin-label">Roles</label>
+                <p className="admin-field-hint">Leave empty if the skill is for everyone.</p>
+                <MultiSelectDropdown
+                  options={ROLES.map(r => ({ value: r, label: r }))}
+                  selected={form.roles ?? []}
+                  onChange={(v) => set('roles', v)}
+                  placeholder="Everyone"
+                />
               </div>
             </div>
           </div>

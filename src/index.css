@@ -3560,3 +3560,63 @@ a {
     font-size: var(--fs-sm);
   }
 }
+
+/* ============================================
+   DIFFICULTY TAG + FILTER ROW
+   ============================================ */
+.card-difficulty {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+
+.card-difficulty--beginner {
+  color: #15803d;
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.card-difficulty--intermediate {
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.card-difficulty--advanced {
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+[data-theme="dark"] .card-difficulty--beginner {
+  color: #4ade80;
+}
+
+[data-theme="dark"] .card-difficulty--intermediate {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .card-difficulty--advanced {
+  color: #f87171;
+}
+
+/* Filter row wraps below the section title on narrow screens */
+@media (max-width: 768px) {
+  .section-header {
+    flex-wrap: wrap;
+    row-gap: var(--space-sm);
+  }
+
+  .section-header-right {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    width: 100%;
+  }
+
+  .section-header-right .section-count {
+    margin-left: auto;
+  }
+}
