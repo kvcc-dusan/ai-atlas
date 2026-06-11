@@ -3473,3 +3473,90 @@ a {
 
 
 
+
+/* ============================================
+   RESPONSIVE POLISH — tablet & mobile only
+   8pt grid: 24px tablet / 16px mobile side margins,
+   24px tablet / 16px mobile card padding, 8px gaps.
+   Desktop (>900px) intentionally untouched.
+   ============================================ */
+
+/* --- Tablet (≤900px) --- */
+@media (max-width: 900px) {
+  .skill-card {
+    padding: var(--space-lg); /* 24px (desktop keeps 40px) */
+  }
+
+  .articles-inner {
+    padding: 0 24px; /* was stuck at desktop 40px */
+  }
+}
+
+/* --- Mobile (≤768px) --- */
+@media (max-width: 768px) {
+  .container,
+  .header-inner,
+  .articles-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .footer-inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .section {
+    padding: var(--space-2xl) 0;
+  }
+
+  /* Skill cards on the 8pt grid */
+  .skill-card {
+    padding: var(--space-md); /* 16px */
+    gap: var(--space-sm);     /* 8px */
+  }
+
+  .card-grid {
+    gap: var(--space-sm); /* 8px */
+  }
+
+  /* Tools rows — wrap the identity row instead of overlapping */
+  .tools-item {
+    padding: var(--space-md) 0;
+  }
+
+  .tools-item-left {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .tools-item-identity {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+
+  /* Articles — larger, readable type now that margins are 16px */
+  .articles-heading {
+    font-size: clamp(1.75rem, 7.5vw, 2.5rem);
+  }
+
+  .articles-summary {
+    font-size: var(--fs-base);
+  }
+
+  .articles-content {
+    min-height: 0;
+  }
+}
+
+/* --- Small mobile (≤480px) --- */
+@media (max-width: 480px) {
+  /* Override the earlier 20px heading — too small for the section's weight */
+  .articles-heading {
+    font-size: clamp(1.5rem, 8vw, 1.875rem);
+  }
+
+  .articles-summary {
+    font-size: var(--fs-sm);
+  }
+}
