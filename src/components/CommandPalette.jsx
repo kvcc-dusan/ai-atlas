@@ -18,6 +18,7 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWor
     const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef(null);
     const modalRef = useRef(null);
+    const activeItemRef = useRef(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -152,6 +153,11 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWor
     // Keep the selection in range as results change
     useEffect(() => { setSelectedIndex(0); }, [query]);
 
+    // Keep the keyboard-selected row inside the scrollable viewport
+    useEffect(() => {
+        activeItemRef.current?.scrollIntoView({ block: 'nearest' });
+    }, [selectedIndex]);
+
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             if (query.trim().toLowerCase() === 'admin') {
@@ -208,6 +214,7 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWor
                                 return (
                                     <button
                                         key={item.key}
+                                        ref={isActive ? activeItemRef : null}
                                         className={`cmd-item ${isActive ? 'active' : ''}`}
                                         onClick={item.onSelect}
                                         onMouseMove={() => setSelectedIndex(index)}
