@@ -4,6 +4,7 @@ import { useWorkflowById, useSkills, useTools } from '../hooks/useData';
 import { useAnalytics } from '../hooks/useAnalytics';
 import CopyIcon from '../assets/icons/copy.svg';
 import GlowImage from './GlowImage';
+import ShareButton from './ShareButton';
 
 const formatDate = (str) => str
   ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -81,7 +82,10 @@ export default function WorkflowDetailView({ onBack, onSkillClick, onToolClick }
     return (
         <div className="detail-view">
             <div className="container">
-                <BackButton onBack={onBack} />
+                <div className="detail-topbar">
+                    <BackButton onBack={onBack} />
+                    <ShareButton path={`/workflows/${workflow.id}`} />
+                </div>
 
                 <div className="detail-meta">
                     <span className="detail-meta-label">{workflow.number}</span>

@@ -8,6 +8,7 @@ const formatDate = (str) => str
   : null;
 import CopyIcon from '../assets/icons/copy.svg';
 import GlowImage from './GlowImage';
+import ShareButton from './ShareButton';
 
 export default function DetailView({ onBack, onNavigate, onToolClick, markRead }) {
     const { id } = useParams();
@@ -128,11 +129,14 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
     return (
         <div className="detail-view detail-view--skill">
             <div className="container">
-                <button className="detail-back" onClick={onBack} aria-label="Back">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 12H5M5 12L12 19M5 12L12 5" />
-                    </svg>
-                </button>
+                <div className="detail-topbar">
+                    <button className="detail-back" onClick={onBack} aria-label="Back">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M19 12H5M5 12L12 19M5 12L12 5" />
+                        </svg>
+                    </button>
+                    <ShareButton path={`/skills/${skill.id}`} />
+                </div>
 
                 <div className="detail-meta">
                     <span className="detail-meta-label">{skill.chapter}</span>

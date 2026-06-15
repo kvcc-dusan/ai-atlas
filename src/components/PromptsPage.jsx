@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useSkills } from '../hooks/useData';
 import { useAnalytics } from '../hooks/useAnalytics';
+import ShareButton from './ShareButton';
 
 export default function PromptsPage({ onBack }) {
     const { data: skills, loading } = useSkills();
@@ -150,9 +151,16 @@ export default function PromptsPage({ onBack }) {
                                     {/* Card header: title left, category tag right */}
                                     <div className="pcard-header">
                                         <h3 className="pcard-title">{prompt.title}</h3>
-                                        {prompt.category && (
-                                            <span className="pcard-category">{prompt.category}</span>
-                                        )}
+                                        <div className="pcard-header-right">
+                                            {prompt.category && (
+                                                <span className="pcard-category">{prompt.category}</span>
+                                            )}
+                                            <ShareButton
+                                                path={`/prompts?highlight=${encodeURIComponent(prompt.key)}`}
+                                                label=""
+                                                className="share-btn--icon"
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* Context description */}

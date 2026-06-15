@@ -3831,3 +3831,68 @@ a {
     margin-left: 0;
   }
 }
+
+/* ============================================
+   SHARE BUTTON + DETAIL TOPBAR
+   ============================================ */
+.detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-medium);
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.share-btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.share-btn.copied {
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+[data-theme="dark"] .share-btn.copied {
+  border-color: #4ade80;
+  color: #4ade80;
+}
+
+.share-btn svg {
+  flex-shrink: 0;
+}
+
+/* Icon-only variant for prompt cards */
+.share-btn--icon {
+  padding: 5px;
+  border-radius: 7px;
+  gap: 0;
+  color: var(--text-muted);
+}
+
+.share-btn--icon:hover {
+  background: var(--bg-hover);
+}
+
+.pcard-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
