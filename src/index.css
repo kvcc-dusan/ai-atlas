@@ -3439,8 +3439,14 @@ a {
   transition: background 0.1s ease;
 }
 
-.cmd-item:hover {
+.cmd-item:hover,
+.cmd-item.active {
   background: var(--bg-hover);
+}
+
+/* Selected row gets an accent rail so keyboard position is obvious */
+.cmd-item.active {
+  box-shadow: inset 2px 0 0 var(--text-primary);
 }
 
 .cmd-item-num {
@@ -3469,6 +3475,60 @@ a {
   flex-shrink: 0;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.cmd-item-difficulty {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.cmd-item-difficulty--beginner { color: #15803d; border-color: rgba(22, 163, 74, 0.3); }
+.cmd-item-difficulty--intermediate { color: #b45309; border-color: rgba(245, 158, 11, 0.35); }
+.cmd-item-difficulty--advanced { color: #b91c1c; border-color: rgba(220, 38, 38, 0.3); }
+
+[data-theme="dark"] .cmd-item-difficulty--beginner { color: #4ade80; }
+[data-theme="dark"] .cmd-item-difficulty--intermediate { color: #fbbf24; }
+[data-theme="dark"] .cmd-item-difficulty--advanced { color: #f87171; }
+
+/* Footer with keyboard hints */
+.cmd-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: 10px 20px;
+  border-top: 1px solid var(--border-light);
+}
+
+.cmd-footer-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cmd-footer-hint kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  color: var(--text-secondary);
 }
 
 

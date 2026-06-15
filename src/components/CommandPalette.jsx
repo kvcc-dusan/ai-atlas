@@ -8,18 +8,17 @@ export default function CommandPalette({ isOpen, ...props }) {
     return <PaletteModal {...props} />;
 }
 
+function DifficultyDot({ level }) {
+    if (!level) return null;
+    return <span className={`cmd-item-difficulty cmd-item-difficulty--${level.toLowerCase()}`}>{level}</span>;
+}
+
 function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWorkflowClick, liveSkills, liveTools, liveUpdates, liveWorkflows }) {
     const [query, setQuery] = useState('');
+    const [selectedIndex, setSelectedIndex] = useState(0);
     const inputRef = useRef(null);
     const modalRef = useRef(null);
     const navigate = useNavigate();
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && query.trim().toLowerCase() === 'admin') {
-            onClose();
-            navigate('/admin');
-        }
-    };
 
     useEffect(() => {
         const timer = setTimeout(() => inputRef.current?.focus(), 30);
@@ -71,39 +70,110 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWor
         return result;
     }, [liveSkills]);
 
-    const q = query.toLowerCase().trim();
+    const goToPrompt = (key) => {
+        onClose();
+        navigate(`/prompts?highlight=${encodeURIComponent(key)}`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
-    const matchedSkills = !q
-        ? (liveSkills ?? []).slice(0, 5)
-        : (liveSkills ?? []).filter(s =>
-            s.title?.toLowerCase().includes(q) ||
-            s.brief?.toLowerCase().includes(q) ||
-            s.tools?.some(t => t.toLowerCase().includes(q)) ||
-            s.category?.toLowerCase().includes(q)
-        ).slice(0, 6);
+    // Sections built as data so the same list drives rendering AND keyboard nav
+    const sections = useMemo(() => {
+        const q = query.toLowerCase().trim();
+        const idle = !q;
 
-    const matchedWorkflows = (liveWorkflows ?? []).filter(w =>
-        !q || w.title?.toLowerCase().includes(q) || w.description?.toLowerCase().includes(q) || w.tools?.some(t => t.toLowerCase().includes(q))
-    ).slice(0, !q ? 0 : 4);
+        const skills = (idle
+            ? (liveSkills ?? []).slice(0, 4)
+            : (liveSkills ?? []).filter(s =>
+                s.title?.toLowerCase().includes(q) ||
+                s.brief?.toLowerCase().includes(q) ||
+                s.tools?.some(t => t.toLowerCase().includes(q)) ||
+                s.category?.toLowerCase().includes(q) ||
+                s.roles?.some(r => r.toLowerCase().includes(q))
+            ).slice(0, 6)
+        ).map(s => ({
+            key: `skill-${s.id}`, num: s.chapter, title: s.title,
+            tag: s.category, difficulty: s.difficulty, onSelect: () => { onSkillClick(s.id); onClose(); },
+        }));
 
-    const matchedTools = (liveTools ?? []).filter(t =>
-        !q || t.name?.toLowerCase().includes(q) || t.provider?.toLowerCase().includes(q) || t.category?.toLowerCase().includes(q)
-    ).slice(0, !q ? 0 : 4);
+        const workflows = (idle
+            ? (liveWorkflows ?? []).slice(0, 3)
+            : (liveWorkflows ?? []).filter(w =>
+                w.title?.toLowerCase().includes(q) ||
+                w.description?.toLowerCase().includes(q) ||
+                w.tools?.some(t => t.toLowerCase().includes(q)) ||
+                w.roles?.some(r => r.toLowerCase().includes(q))
+            ).slice(0, 4)
+        ).map(w => ({
+            key: `workflow-${w.id}`, num: w.number, title: w.title,
+            tag: 'Workflow', difficulty: w.difficulty, onSelect: () => { onWorkflowClick(w.id); onClose(); },
+        }));
 
-    const matchedUpdates = (liveUpdates ?? []).filter(u =>
-        !q || u.title?.toLowerCase().includes(q) || u.summary?.toLowerCase().includes(q)
-    ).slice(0, !q ? 0 : 3);
-
-    const matchedPrompts = !q
-        ? []
-        : allPrompts.filter(p =>
+        const prompts = (idle ? [] : allPrompts.filter(p =>
             p.title?.toLowerCase().includes(q) ||
             p.template?.toLowerCase().includes(q) ||
             p.context?.toLowerCase().includes(q) ||
             p.skillTitle?.toLowerCase().includes(q)
-        ).slice(0, 4);
+        ).slice(0, 4)).map(p => ({
+            key: `prompt-${p.key}`, num: p.skillChapter, title: p.title,
+            tag: p.category, onSelect: () => goToPrompt(p.key),
+        }));
 
-    const hasResults = matchedSkills.length || matchedWorkflows.length || matchedTools.length || matchedUpdates.length || matchedPrompts.length;
+        const tools = (idle ? [] : (liveTools ?? []).filter(t =>
+            t.name?.toLowerCase().includes(q) ||
+            t.provider?.toLowerCase().includes(q) ||
+            t.category?.toLowerCase().includes(q)
+        ).slice(0, 4)).map(t => ({
+            key: `tool-${t.id}`, num: t.provider, title: t.name,
+            tag: t.category, onSelect: () => { onToolClick(t.name); onClose(); },
+        }));
+
+        const updates = (idle ? [] : (liveUpdates ?? []).filter(u =>
+            u.title?.toLowerCase().includes(q) ||
+            u.summary?.toLowerCase().includes(q)
+        ).slice(0, 3)).map(u => ({
+            key: `update-${u.id}`, num: u.tag, title: u.title,
+            onSelect: () => { onUpdateClick(u.id); onClose(); },
+        }));
+
+        return [
+            { label: idle ? 'Jump to' : 'Skills', items: skills },
+            { label: 'Workflows', items: workflows },
+            { label: 'Prompts', items: prompts },
+            { label: 'Tools', items: tools },
+            { label: 'Articles', items: updates },
+        ].filter(s => s.items.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [query, liveSkills, liveWorkflows, liveTools, liveUpdates, allPrompts]);
+
+    // Flatten in display order so arrow keys can walk every result
+    const flatItems = useMemo(() => sections.flatMap(s => s.items), [sections]);
+    const hasResults = flatItems.length > 0;
+
+    // Keep the selection in range as results change
+    useEffect(() => { setSelectedIndex(0); }, [query]);
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            if (query.trim().toLowerCase() === 'admin') {
+                onClose();
+                navigate('/admin');
+                return;
+            }
+            flatItems[selectedIndex]?.onSelect();
+            return;
+        }
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSelectedIndex((i) => (flatItems.length ? (i + 1) % flatItems.length : 0));
+        }
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSelectedIndex((i) => (flatItems.length ? (i - 1 + flatItems.length) % flatItems.length : 0));
+        }
+    };
+
+    // Running index so each rendered row knows its place in the flat list
+    let runningIndex = -1;
 
     return (
         <div className="cmd-overlay" onClick={onClose} role="presentation">
@@ -115,7 +185,7 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWor
                     <input
                         ref={inputRef}
                         className="cmd-input"
-                        placeholder="Search skills, tools, prompts, articles…"
+                        placeholder="Search skills, workflows, prompts, tools, articles…"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onKeyDown={handleKeyDown}
@@ -124,101 +194,39 @@ function PaletteModal({ onClose, onSkillClick, onUpdateClick, onToolClick, onWor
                 </div>
 
                 <div className="cmd-results">
-                    {q && !hasResults && (
+                    {query.trim() && !hasResults && (
                         <p className="cmd-empty">No results for &ldquo;{query}&rdquo;</p>
                     )}
 
-                    {!q && (
-                        <p className="cmd-hint">Start typing to search skills, tools, prompts and articles&hellip;</p>
-                    )}
-
-                    {matchedSkills.length > 0 && (
-                        <div className="cmd-group">
-                            <span className="cmd-group-label">Skills</span>
-                            {matchedSkills.map(skill => (
-                                <button
-                                    key={skill.id}
-                                    className="cmd-item"
-                                    onClick={() => { onSkillClick(skill.id); onClose(); }}
-                                >
-                                    <span className="cmd-item-num">{skill.chapter}</span>
-                                    <span className="cmd-item-title">{skill.title}</span>
-                                    <span className="cmd-item-tag">{skill.category}</span>
-                                </button>
-                            ))}
+                    {sections.map((section) => (
+                        <div className="cmd-group" key={section.label}>
+                            <span className="cmd-group-label">{section.label}</span>
+                            {section.items.map((item) => {
+                                runningIndex += 1;
+                                const index = runningIndex;
+                                const isActive = index === selectedIndex;
+                                return (
+                                    <button
+                                        key={item.key}
+                                        className={`cmd-item ${isActive ? 'active' : ''}`}
+                                        onClick={item.onSelect}
+                                        onMouseMove={() => setSelectedIndex(index)}
+                                    >
+                                        {item.num && <span className="cmd-item-num">{item.num}</span>}
+                                        <span className="cmd-item-title">{item.title}</span>
+                                        <DifficultyDot level={item.difficulty} />
+                                        {item.tag && <span className="cmd-item-tag">{item.tag}</span>}
+                                    </button>
+                                );
+                            })}
                         </div>
-                    )}
+                    ))}
+                </div>
 
-                    {matchedWorkflows.length > 0 && (
-                        <div className="cmd-group">
-                            <span className="cmd-group-label">Workflows</span>
-                            {matchedWorkflows.map(wf => (
-                                <button
-                                    key={wf.id}
-                                    className="cmd-item"
-                                    onClick={() => { onWorkflowClick(wf.id); onClose(); }}
-                                >
-                                    <span className="cmd-item-num">{wf.number}</span>
-                                    <span className="cmd-item-title">{wf.title}</span>
-                                    <span className="cmd-item-tag">Workflow</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {matchedPrompts.length > 0 && (
-                        <div className="cmd-group">
-                            <span className="cmd-group-label">Prompts</span>
-                            {matchedPrompts.map(prompt => (
-                                <button
-                                    key={prompt.key}
-                                    className="cmd-item"
-                                    onClick={() => {
-                                        onClose();
-                                        navigate(`/prompts?highlight=${encodeURIComponent(prompt.key)}`);
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                                    }}
-                                >
-                                    <span className="cmd-item-num">{prompt.skillChapter}</span>
-                                    <span className="cmd-item-title">{prompt.title}</span>
-                                    <span className="cmd-item-tag">{prompt.category}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {matchedTools.length > 0 && (
-                        <div className="cmd-group">
-                            <span className="cmd-group-label">Tools</span>
-                            {matchedTools.map(tool => (
-                                <button
-                                    key={tool.id}
-                                    className="cmd-item"
-                                    onClick={() => { onToolClick(tool.name); onClose(); }}
-                                >
-                                    <span className="cmd-item-num">{tool.provider}</span>
-                                    <span className="cmd-item-title">{tool.name}</span>
-                                    <span className="cmd-item-tag">{tool.category}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {matchedUpdates.length > 0 && (
-                        <div className="cmd-group">
-                            <span className="cmd-group-label">Articles</span>
-                            {matchedUpdates.map(u => (
-                                <button
-                                    key={u.id}
-                                    className="cmd-item"
-                                    onClick={() => { onUpdateClick(u.id); onClose(); }}
-                                >
-                                    <span className="cmd-item-num">{u.tag}</span>
-                                    <span className="cmd-item-title">{u.title}</span>
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                <div className="cmd-footer">
+                    <span className="cmd-footer-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+                    <span className="cmd-footer-hint"><kbd>↵</kbd> open</span>
+                    <span className="cmd-footer-hint"><kbd>esc</kbd> close</span>
                 </div>
             </div>
         </div>
