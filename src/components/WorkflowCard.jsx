@@ -46,8 +46,12 @@ export default function WorkflowCard({ workflow, onClick, onToolClick }) {
                         </span>
                     ))}
                 </div>
-                {stepCount > 0 && (
-                    <span className="card-step-count">{stepCount} steps</span>
+                {(stepCount > 0 || workflow.estTime) && (
+                    <span className="card-step-count">
+                        {stepCount > 0 ? `${stepCount} steps` : ''}
+                        {stepCount > 0 && workflow.estTime ? ' · ' : ''}
+                        {workflow.estTime}
+                    </span>
                 )}
             </div>
         </div>

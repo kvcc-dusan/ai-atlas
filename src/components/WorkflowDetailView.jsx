@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useWorkflowById, useSkills, useTools } from '../hooks/useData';
 import { useAnalytics } from '../hooks/useAnalytics';
 import CopyIcon from '../assets/icons/copy.svg';
+import GlowImage from './GlowImage';
 
 const formatDate = (str) => str
   ? new Date(str + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -98,6 +99,12 @@ export default function WorkflowDetailView({ onBack, onSkillClick, onToolClick }
                     <span className="detail-meta-label">
                         {workflow.roles?.length ? workflow.roles.join(' · ') : 'Everyone'}
                     </span>
+                    {workflow.estTime && (
+                        <>
+                            <span className="detail-meta-sep">/</span>
+                            <span className="detail-meta-label">{workflow.estTime}</span>
+                        </>
+                    )}
                     {workflow.lastUpdated && (
                         <>
                             <span className="detail-meta-sep">/</span>
@@ -113,6 +120,22 @@ export default function WorkflowDetailView({ onBack, onSkillClick, onToolClick }
                 )}
 
                 <div className="detail-divider" />
+
+                {workflow.prerequisites?.length > 0 && (
+                    <div className="workflow-prereqs">
+                        <h2 className="detail-section-title">Before you start</h2>
+                        <ul className="workflow-prereq-list">
+                            {workflow.prerequisites.map((item, i) => (
+                                <li key={i} className="workflow-prereq-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M20 6L9 17l-5-5" />
+                                    </svg>
+                                    <span>{item}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="workflow-steps-detail">
                     {(workflow.steps ?? []).map((step, i) => {
@@ -148,6 +171,14 @@ export default function WorkflowDetailView({ onBack, onSkillClick, onToolClick }
 
                                 {step.text && <p className="detail-text workflow-step-text">{step.text}</p>}
 
+                                {step.image && (
+                                    <GlowImage
+                                        url={step.image}
+                                        className="workflow-step-image"
+                                        style={{ aspectRatio: step.image_ratio || '16/9' }}
+                                    />
+                                )}
+
                                 {step.prompt && (
                                     <div className="prompt-block workflow-step-prompt">
                                         <div className="prompt-header">
@@ -167,6 +198,27 @@ export default function WorkflowDetailView({ onBack, onSkillClick, onToolClick }
                         );
                     })}
                 </div>
+
+                {workflow.outcome && (
+                    <div className="workflow-outcome">
+                        <h2 className="detail-section-title">When you&apos;re done</h2>
+                        <p className="workflow-outcome-text">{workflow.outcome}</p>
+                    </div>
+                )}
+
+                {workflow.tips?.length > 0 && (
+                    <section className="detail-section" style={{ marginTop: 'var(--space-2xl)' }}>
+                        <h2 className="detail-section-title">Tips &amp; Gotchas</h2>
+                        <ul className="tips-list">
+                            {workflow.tips.map((tip, i) => (
+                                <li key={i} className="tip-item">
+                                    <span className="tip-marker">//</span>
+                                    <span>{tip}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                )}
 
                 {relatedSkills.length > 0 && (
                     <section className="detail-section" style={{ marginTop: 'var(--space-2xl)' }}>

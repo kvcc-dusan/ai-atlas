@@ -107,6 +107,10 @@ function mapWorkflow(row) {
     tools: row.tools ?? [],
     steps: row.steps ?? [],
     relatedSkills: row.related_skills ?? [],
+    estTime: row.est_time ?? '',
+    prerequisites: row.prerequisites ?? [],
+    outcome: row.outcome ?? '',
+    tips: row.tips ?? [],
   };
 }
 

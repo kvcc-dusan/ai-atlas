@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 import AdminLayout from './AdminLayout';
 import MultiSelectDropdown from './components/MultiSelectDropdown';
 import SingleSelectDropdown from './components/SingleSelectDropdown';
+import RepeatableField from './components/RepeatableField';
+import ImageUpload from './components/ImageUpload';
 import ConfirmDialog from './components/ConfirmDialog';
 import PublishToggle from './components/PublishToggle';
 import { ROLES, DIFFICULTIES } from '../lib/taxonomy';
@@ -19,11 +21,15 @@ const EMPTY = {
   status: 'active',
   is_published: false,
   last_updated: new Date().toISOString().slice(0, 10),
+  est_time: '',
+  prerequisites: [],
+  outcome: '',
+  tips: [],
   steps: [],
   related_skills: [],
 };
 
-const EMPTY_STEP = { title: '', text: '', tool: '', skill_id: null, prompt: '' };
+const EMPTY_STEP = { title: '', text: '', tool: '', skill_id: null, prompt: '', image: '', image_ratio: '16/9' };
 
 export default function WorkflowForm() {
   const { id } = useParams();
@@ -179,6 +185,24 @@ export default function WorkflowForm() {
                 <input type="date" className="admin-input" value={form.last_updated ?? ''} onChange={(e) => set('last_updated', e.target.value)} />
               </div>
             </div>
+
+            <div className="admin-row cols-2">
+              <div className="admin-field">
+                <label className="admin-label">Estimated time</label>
+                <input className="admin-input" value={form.est_time ?? ''} onChange={(e) => set('est_time', e.target.value)} placeholder="e.g. ~20 min" />
+              </div>
+              <div className="admin-field" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Before You Start ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">Before You Start</span>
+          </div>
+          <div className="admin-section-body">
+            <RepeatableField values={form.prerequisites ?? []} onChange={(v) => set('prerequisites', v)} placeholder="e.g. Claude Pro seat, Figma access to the project…" />
           </div>
         </div>
 
@@ -231,6 +255,15 @@ export default function WorkflowForm() {
                     <label className="admin-label">Prompt for this step (optional)</label>
                     <textarea className="admin-textarea" rows={4} value={step.prompt ?? ''} onChange={(e) => updateStep(i, 'prompt', e.target.value)} placeholder="Paste the copy-ready prompt. Use [brackets] for placeholders." />
                   </div>
+                  <div className="admin-field">
+                    <label className="admin-label">Screenshot for this step (optional)</label>
+                    <ImageUpload
+                      imageUrl={step.image ?? ''}
+                      aspectRatio={step.image_ratio ?? '16/9'}
+                      onImageChange={(url) => updateStep(i, 'image', url)}
+                      onAspectRatioChange={(r) => updateStep(i, 'image_ratio', r)}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -238,6 +271,28 @@ export default function WorkflowForm() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
               Add step
             </button>
+          </div>
+        </div>
+
+        {/* ── When You're Done ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">When You&apos;re Done</span>
+          </div>
+          <div className="admin-section-body">
+            <div className="admin-field">
+              <textarea className="admin-textarea" rows={3} value={form.outcome ?? ''} onChange={(e) => set('outcome', e.target.value)} placeholder="What the person should have at the end, e.g. 'PR opened with AI review comments resolved.'" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Tips & Gotchas ── */}
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <span className="admin-section-title">Tips &amp; Gotchas</span>
+          </div>
+          <div className="admin-section-body">
+            <RepeatableField values={form.tips ?? []} onChange={(v) => set('tips', v)} multiline placeholder="Add a tip or warning…" />
           </div>
         </div>
 
