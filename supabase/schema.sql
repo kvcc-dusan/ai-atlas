@@ -10,6 +10,7 @@ create table if not exists skills (
   category       text        not null,
   title          text        not null,
   brief          text,
+  source_url     text,
   tools          text[]      default '{}',
   status         text        not null default 'active',
   last_updated   date,

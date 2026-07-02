@@ -55,6 +55,7 @@ function mapSkill(row) {
     category: row.category,
     title: row.title,
     brief: row.brief,
+    sourceUrl: row.source_url ?? '',
     tools: row.tools ?? [],
     status: row.status,
     lastUpdated: row.last_updated,

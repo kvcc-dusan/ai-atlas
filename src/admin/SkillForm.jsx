@@ -20,6 +20,7 @@ const EMPTY = {
   category: 'CREATIVE',
   title: '',
   brief: '',
+  source_url: '',
   tools: [],
   status: 'active',
   is_published: false,
@@ -105,6 +106,7 @@ export default function SkillForm() {
     if (isNew) delete payload.id;
     // Send null (not empty string) so the DB clears the value
     if (!payload.image_url) payload.image_url = null;
+    if (!payload.source_url) payload.source_url = null;
     // Clean image_rows: keep only rows that have at least one image
     if (payload.image_rows) {
       payload.image_rows = payload.image_rows.filter(r =>
@@ -197,6 +199,14 @@ export default function SkillForm() {
                 <label className="admin-label">Brief description</label>
               </div>
               <textarea className="admin-textarea" value={form.brief} onChange={(e) => set('brief', e.target.value)} placeholder="Short description visible on the card grid…" rows={3} />
+            </div>
+
+            <div className="admin-field">
+              <div className="admin-field-header">
+                <label className="admin-label">Source link</label>
+              </div>
+              <input className="admin-input" type="url" value={form.source_url ?? ''} onChange={(e) => set('source_url', e.target.value)} placeholder="https://github.com/kvcc-dusan/ai-atlas-skills/tree/main/skills/figma-grounding" />
+              <p className="admin-field-hint">Where the actual skill lives — repo folder, gist, doc. Shown as a link on the public skill page. Leave blank if there isn't one yet.</p>
             </div>
 
             <div className="admin-row cols-2">

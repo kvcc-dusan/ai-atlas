@@ -3902,6 +3902,12 @@ a {
   gap: var(--space-md);
 }
 
+.detail-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
 .share-btn {
   display: inline-flex;
   align-items: center;

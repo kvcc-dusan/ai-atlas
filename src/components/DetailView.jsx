@@ -135,7 +135,23 @@ export default function DetailView({ onBack, onNavigate, onToolClick, markRead }
                             <path d="M19 12H5M5 12L12 19M5 12L12 5" />
                         </svg>
                     </button>
-                    <ShareButton path={`/skills/${skill.id}`} />
+                    <div className="detail-topbar-actions">
+                        {skill.sourceUrl && (
+                            <a
+                                href={skill.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="share-btn"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    <path d="M15 3h6v6" /><path d="M10 14L21 3" />
+                                </svg>
+                                View source
+                            </a>
+                        )}
+                        <ShareButton path={`/skills/${skill.id}`} />
+                    </div>
                 </div>
 
                 <div className="detail-meta">
